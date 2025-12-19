@@ -31,7 +31,5 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.koin.android)
     implementation(libs.kotlinx.coroutines.android)
-    
-    // Room / DataStore / SQLDelight would go here
-    // implementation(libs.sqldelight.android) 
+    implementation(libs.androidx.datastore.preferences)
 }
