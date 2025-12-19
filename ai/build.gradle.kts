@@ -34,4 +34,5 @@ dependencies {
     
     // MediaPipe dependencies will go here
     implementation(libs.mediapipe.tasks.audio)
+    implementation(libs.litert.support.api)
 }
