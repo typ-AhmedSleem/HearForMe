@@ -23,7 +23,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -124,15 +123,6 @@ fun WelcomeScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(Icons.Default.ArrowForward, contentDescription = null)
                 }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            TextButton(onClick = { /* Login */ }) {
-                Text(
-                    "Log in to existing account",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
     }
