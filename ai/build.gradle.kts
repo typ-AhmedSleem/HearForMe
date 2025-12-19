@@ -33,4 +33,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     
     // MediaPipe dependencies will go here
+    implementation(libs.mediapipe.tasks.audio)
 }
