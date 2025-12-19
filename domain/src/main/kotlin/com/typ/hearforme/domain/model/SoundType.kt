@@ -3,10 +3,10 @@ package com.typ.hearforme.domain.model
 enum class SoundType(val displayName: String) {
     BABY_CRYING("Baby Crying"),
     DOORBELL("Doorbell"),
-    KNOCK("Door Knock"),
-    ALARM_SIREN("Alarm / Siren"),
-    DOG_BARK("Dog Barking"),
-    CAT_MEOW("Cat Meowing"),
+    ALARM_SIREN("Siren"),
+    DOG_BARKING("Dog Barking"),
+    SMOKE_ALARM("Smoke Alarm"),
+    RUNNING_WATER("Running Water"),
     UNKNOWN("Unknown");
 
     companion object {
