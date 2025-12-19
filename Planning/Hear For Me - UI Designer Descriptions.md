@@ -1,0 +1,16 @@
+## Screens
+- **Welcome Screen:** Now reflects the app name "Hear for Me" and introduces its purpose and benefits with a clear call to action.
+- **Sound Dashboard:** Updated to include the "Hear for Me" app name, prominently displaying detected sounds with a modern, easily understandable UI.
+- **Sound Settings:** Updated for the "Hear for Me" app, allowing customization of sound detection and notification methods with clear labels.
+- **History Log:** Now features the "Hear for Me" app name, displaying a chronological log of detected sounds and notifications for easy readability.
+- **Onboarding: Sound Detection:** The first onboarding screen for "Hear for Me," visually explaining how the app detects sounds in a simple and modern way.
+- **Onboarding: Notifications:** The second onboarding screen for "Hear for Me," detailing the app's notification methods (flashlight, vibration, device notification) with a simple, visual approach.
+- **Onboarding: Permissions:** The third onboarding screen for "Hear for Me," guiding users through granting essential permissions (microphone, notifications) with clear instructions.
+- **Onboarding: Get Started:** The final onboarding screen for "Hear for Me," encouraging users to begin using the app and providing a direct link to the Sound Dashboard.
+- **Sound Dashboard:** This screen now prominently features a clear visual indicator that dynamically responds to detected sounds, providing immediate feedback. It maintains the light theme, simple, modern, and easily understandable UI, with minimized controls and quick access to essential settings and sound history.
+- **Sound Dashboard: High:** This variant shows the dashboard detecting a "Baby Crying" sound, with the visual indicator responding to it. It maintains the light theme and focused UI.
+- **Sound Dashboard: Normal:** This variant illustrates the dashboard detecting a "Door Bell" sound, with the visual indicator active. It also features the light theme and minimized controls.
+- **Sound Dashboard: Critical:** This variant displays the dashboard detecting a "Siren" sound, with the visual indicator dynamically responding. The light theme and focused UI are consistent.
+- **Notification: High:** This is a full-screen overlay clearly indicating a "Baby Crying" alert. It uses a light theme with visual cues like a flashing icon to enhance the notification experience for deaf users, alongside minimal text and a clear dismiss action (used for HIGH priority alerts)
+- **Notification: Normal:** This full-screen overlay presents a "Door Bell" alert, featuring a light theme and strong visual cues to notify the user. It maintains minimal text and a clear dismiss button for easy interaction (used for NORMAL priority alerts).
+- **Notification: Critical:** This full-screen overlay displays a "Siren" alert, utilizing a light theme with prominent visual cues and iconography for immediate understanding. It includes minimal text and a straightforward dismiss action (used for CRITICAL priority alerts).
