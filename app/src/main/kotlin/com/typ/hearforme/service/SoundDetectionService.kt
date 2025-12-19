@@ -32,6 +32,7 @@ class SoundDetectionService : Service() {
 
     override fun onCreate() {
         super.onCreate()
+        Log.d("HearForMe", "Service created")
         startForegroundService()
 
         serviceScope.launch {
