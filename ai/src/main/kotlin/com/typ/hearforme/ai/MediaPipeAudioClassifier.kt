@@ -5,7 +5,7 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifier
 import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifierResult
-import com.google.mediapipe.tasks.components.containers.AudioData.*
+import com.google.mediapipe.tasks.components.containers.AudioData
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
@@ -29,7 +29,6 @@ class MediaPipeAudioClassifier(
     private var audioRecord: AudioRecord? = null
     private val executor = ScheduledThreadPoolExecutor(1)
 
-    // Emissions should be hot
     private val _events = MutableSharedFlow<SoundEvent>(
         replay = 0,
         extraBufferCapacity = 10,
@@ -52,12 +51,9 @@ class MediaPipeAudioClassifier(
             .build()
 
         try {
-            AudioDataFormat
-                .builder()
-                .setNumOfChannels()
-                .setSampleRate()
-                .build()
             classifier = AudioClassifier.createFromOptions(context, options)
+
+            // YAMNet requires 16kHz
             audioRecord = classifier?.createAudioRecord(
                 AudioFormat.CHANNEL_IN_DEFAULT,
                 AudioClassifierConstants.SAMPLING_RATE_IN_HZ,
@@ -74,39 +70,50 @@ class MediaPipeAudioClassifier(
     private fun startPolling() {
         audioRecord?.startRecording()
 
-        executor.scheduleWithFixedDelay({
+        executor.scheduleWithFixedDelay(
+            {
             val audioClassifier = classifier ?: return@scheduleWithFixedDelay
             val record = audioRecord ?: return@scheduleWithFixedDelay
 
-            // Capture audio
-            // record.read(buffer) ? 
-            // MediaPipe Java API helper: classify(tensorAudio)
+                // Create TensorAudio manually
+                // YAMNet input is ~15600 samples (0.975s)
+                val format = AudioFormat.Builder()
+                    .setSampleRate(AudioClassifierConstants.SAMPLING_RATE_IN_HZ)
+                    .build()
 
-            val tensorAudio = audioClassifier.createInputTensorAudio()
+                val tensorAudio = AudioData.create(format, 15600)
             tensorAudio.load(record)
 
             val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
             processResults(results)
 
-        }, 0, 500, TimeUnit.MILLISECONDS) // Run every 500ms
+            },
+            0,
+            500,
+            TimeUnit.MILLISECONDS
+        )
     }
 
     private fun processResults(results: AudioClassifierResult) {
         val classificationResults = results.classificationResults()
         if (classificationResults.isEmpty()) return
 
-        // head index 0 is usually the main head
-        val classifications = classificationResults[0].classifications()
+        val classifications = classificationResults.first().classifications()
 
-        val topResult = classifications.maxByOrNull { it.score() } ?: return
+        val topResult = classifications.map {
+            it.categories().maxByOrNull { category -> category.score() }
+        }.firstOrNull()
 
-        if (topResult.score() > threshold) {
-            val soundType = SoundType.fromLabel(topResult.categoryName())
+        val topResultScore = topResult?.score() ?: 0f
+        val topResultLabel = topResult?.categoryName() ?: SoundType.UNKNOWN.displayName
+
+        if (topResultScore > threshold) {
+            val soundType = SoundType.fromLabel(topResultLabel)
             if (soundType != SoundType.UNKNOWN) {
                 val event = SoundEvent(
                     type = soundType,
+                    confidence = topResultScore,
                     timestamp = System.currentTimeMillis(),
-                    confidence = topResult.score()
                 )
                 scope.launch {
                     _events.emit(event)
