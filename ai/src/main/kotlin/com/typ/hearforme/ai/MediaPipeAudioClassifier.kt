@@ -3,6 +3,7 @@ package com.typ.hearforme.ai
 import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
+import android.util.Log
 import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifier
 import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifierResult
 import com.google.mediapipe.tasks.components.containers.AudioData
@@ -40,6 +41,7 @@ class MediaPipeAudioClassifier(
 
     override fun start() {
         if (classifier != null) return
+        Log.d("HearForMe", "Starting classifier")
 
         val baseOptions = BaseOptions.builder()
             .setModelAssetPath(modelPath)
@@ -68,25 +70,38 @@ class MediaPipeAudioClassifier(
     }
 
     private fun startPolling() {
-        audioRecord?.startRecording()
+        Log.d("HearForMe", "Starting polling")
+        audioRecord?.startRecording() ?: return
+        Log.d("HearForMe", "Recording started")
+
+        val audioClassifier = classifier ?: return
+        Log.d("HearForMe", "AudioClassifier created")
+        val record = audioRecord ?: return
+        Log.d("HearForMe", "AudioRecord created")
+
+        // Create TensorAudio manually
+        // YAMNet input is ~15600 samples (0.975s)
+        AudioFormat.Builder()
+            .setSampleRate(AudioClassifierConstants.SAMPLING_RATE_IN_HZ)
+            .build()
+        Log.d("HearForMe", "AudioFormat created")
+        val tensorAudio = AudioData.create(
+            AudioData
+                .AudioDataFormat
+                .builder()
+                .setNumOfChannels(1)
+                .setSampleRate(AudioClassifierConstants.SAMPLING_RATE_IN_HZ.toFloat())
+                .build(),
+            15600
+        )
+        Log.d("HearForMe", "TensorAudio created")
 
         executor.scheduleWithFixedDelay(
             {
-            val audioClassifier = classifier ?: return@scheduleWithFixedDelay
-            val record = audioRecord ?: return@scheduleWithFixedDelay
+                tensorAudio.load(record)
 
-                // Create TensorAudio manually
-                // YAMNet input is ~15600 samples (0.975s)
-                val format = AudioFormat.Builder()
-                    .setSampleRate(AudioClassifierConstants.SAMPLING_RATE_IN_HZ)
-                    .build()
-
-                val tensorAudio = AudioData.create(format, 15600)
-            tensorAudio.load(record)
-
-            val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
-            processResults(results)
-
+                val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
+                processResults(results)
             },
             0,
             500,
