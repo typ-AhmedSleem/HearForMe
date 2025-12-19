@@ -40,6 +40,8 @@ koin-compose-viewmodel-navigation = { module = "io.insert-koin:koin-compose-view
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
 kmputils-common = { module = "pro.respawn.kmmutils:common", version.ref = "kmputils" }
 kmputils-compose = { module = "pro.respawn.kmmutils:compose", version.ref = "kmputils" }
+kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "kotlinxCoroutines" }
 sonner = { module = "io.github.dokar3:sonner", version="0.3.8" }
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
@@ -50,6 +52,8 @@ sqldelight-native = { module = "app.cash.sqldelight:native-driver", version.ref 
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 
 [bundles]
 kmpUtils = ["kmputils-common", "kmputils-compose"]

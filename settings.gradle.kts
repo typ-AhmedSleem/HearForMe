@@ -21,3 +21,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "Hear for Me"
 include(":app")
+include(":domain")
+include(":data")
+include(":ai")
+include(":presentation")
+include(":designsystem")
+include(":mock")
