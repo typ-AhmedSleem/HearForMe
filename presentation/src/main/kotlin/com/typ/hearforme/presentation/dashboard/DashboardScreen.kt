@@ -51,10 +51,17 @@ fun DashboardScreen(
     history: List<SoundEvent> = emptyList(),
     onNavigateToSettings: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
+    onNavigateToCommunication: () -> Unit = {},
 ) {
     Scaffold(
         topBar = { DashboardTopBar(onNavigateToSettings) },
-        bottomBar = { DashboardBottomBar(onSettingsClick = onNavigateToSettings, onHistoryClick = onNavigateToHistory) },
+        bottomBar = {
+            DashboardBottomBar(
+                onSettingsClick = onNavigateToSettings,
+                onHistoryClick = onNavigateToHistory,
+                onCommunicationClick = onNavigateToCommunication
+            )
+        },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPaddings ->
         Column(
@@ -312,7 +319,11 @@ fun MockSoundHistoryItem(index: Int) {
 }
 
 @Composable
-fun DashboardBottomBar(onSettingsClick: () -> Unit = {}, onHistoryClick: () -> Unit = {}) {
+fun DashboardBottomBar(
+    onSettingsClick: () -> Unit = {},
+    onHistoryClick: () -> Unit = {},
+    onCommunicationClick: () -> Unit = {},
+) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -328,11 +339,12 @@ fun DashboardBottomBar(onSettingsClick: () -> Unit = {}, onHistoryClick: () -> U
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Active listening button
+            // Active listening button -> Communication / Stats
             Surface(
                 modifier = Modifier.size(50.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = OnBackground
+                color = OnBackground,
+                onClick = onCommunicationClick
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text("📊", fontSize = 20.sp)
