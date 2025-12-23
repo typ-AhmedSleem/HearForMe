@@ -4,6 +4,9 @@ import com.typ.hearforme.domain.model.SoundType
 import kotlinx.coroutines.flow.Flow
 
 interface SettingsRepository {
+
+    // Onboarding
+    val hasCompletedOnboarding: Flow<Boolean>
     
     // Global toggle
     val isDetectionEnabled: Flow<Boolean>
@@ -19,6 +22,7 @@ interface SettingsRepository {
     val isVibrationEnabled: Flow<Boolean>
 
     // Update functions
+    suspend fun setOnboardingCompleted()
     suspend fun setDetectionEnabled(enabled: Boolean)
     suspend fun setSoundTypeEnabled(type: SoundType, enabled: Boolean)
     suspend fun setSensitivity(type: SoundType, sensitivity: Float)

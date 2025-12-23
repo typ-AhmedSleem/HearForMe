@@ -14,20 +14,24 @@ private val Context.dataStore by preferencesDataStore(name = "settings")
 
 class SettingsRepositoryImpl(private val context: Context) : SettingsRepository {
 
+    private val KEY_ONBOARDING_COMPLETED = booleanPreferencesKey("onboarding_completed")
     private val KEY_DETECTION_ENABLED = booleanPreferencesKey("detection_enabled")
     private val KEY_FLASHLIGHT_ENABLED = booleanPreferencesKey("flashlight_enabled")
     private val KEY_VIBRATION_ENABLED = booleanPreferencesKey("vibration_enabled")
+
+    override val hasCompletedOnboarding: Flow<Boolean> = context.dataStore.data
+        .map { preferences -> preferences[KEY_ONBOARDING_COMPLETED] ?: false }
 
     override val isDetectionEnabled: Flow<Boolean> = context.dataStore.data
         .map { preferences -> preferences[KEY_DETECTION_ENABLED] ?: true }
 
     override fun isSoundTypeEnabled(type: SoundType): Flow<Boolean> {
-        val key = booleanPreferencesKey("sound_enabled_${type.name}")
+        val key = booleanPreferencesKey("sound_enabled_${type::class.simpleName}")
         return context.dataStore.data.map { it[key] ?: true }
     }
 
     override fun getSensitivity(type: SoundType): Flow<Float> {
-        val key = floatPreferencesKey("sound_sensitivity_${type.name}")
+        val key = floatPreferencesKey("sound_sensitivity_${type::class.simpleName}")
         return context.dataStore.data.map { it[key] ?: 0.5f }
     }
 
@@ -37,17 +41,21 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override val isVibrationEnabled: Flow<Boolean> = context.dataStore.data
         .map { it[KEY_VIBRATION_ENABLED] ?: true }
 
+    override suspend fun setOnboardingCompleted() {
+        context.dataStore.edit { it[KEY_ONBOARDING_COMPLETED] = true }
+    }
+
     override suspend fun setDetectionEnabled(enabled: Boolean) {
         context.dataStore.edit { it[KEY_DETECTION_ENABLED] = enabled }
     }
 
     override suspend fun setSoundTypeEnabled(type: SoundType, enabled: Boolean) {
-        val key = booleanPreferencesKey("sound_enabled_${type.name}")
+        val key = booleanPreferencesKey("sound_enabled_${type::class.simpleName}")
         context.dataStore.edit { it[key] = enabled }
     }
 
     override suspend fun setSensitivity(type: SoundType, sensitivity: Float) {
-        val key = floatPreferencesKey("sound_sensitivity_${type.name}")
+        val key = floatPreferencesKey("sound_sensitivity_${type::class.simpleName}")
         context.dataStore.edit { it[key] = sensitivity }
     }
 

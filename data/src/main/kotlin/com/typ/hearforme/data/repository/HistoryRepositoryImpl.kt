@@ -23,7 +23,7 @@ class HistoryRepositoryImpl(
             .map { entities ->
                 entities.map { entity ->
                     SoundEvent(
-                        type = SoundType.valueOf(entity.type),
+                        type = SoundType.fromLabel(entity.type),
                         confidence = entity.confidence.toFloat(),
                         timestamp = entity.timestamp
                     )
@@ -33,7 +33,7 @@ class HistoryRepositoryImpl(
 
     override suspend fun saveEvent(event: SoundEvent) {
         queries.insertEvent(
-            type = event.type.name,
+            type = event.type.label,
             confidence = event.confidence.toDouble(),
             timestamp = event.timestamp,
             metadata = null

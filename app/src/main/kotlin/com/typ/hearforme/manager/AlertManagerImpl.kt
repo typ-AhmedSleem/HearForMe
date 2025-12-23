@@ -48,7 +48,7 @@ class AlertManagerImpl(
         // Check if we should show overlay (High/Critical)
         if (event.confidence > 0.7f) {
             _activeAlert.value = event
-            triggerFeedback()
+            triggerFeedback(event.type.priority)
         }
     }
 
@@ -58,7 +58,7 @@ class AlertManagerImpl(
 
     override fun triggerSOS() {
         val sosEvent = SoundEvent(
-            type = SoundType.ALARM_SIREN,
+            type = SoundType.AlarmSiren,
             confidence = 1.0f,
             timestamp = System.currentTimeMillis()
         )
@@ -76,14 +76,14 @@ class AlertManagerImpl(
             }
         }
 
-        // Continuous vibration
-        vibrate()
+        // Critical vibration
+        vibrate(SoundType.Priority.CRITICAL)
     }
 
-    private fun triggerFeedback() {
+    private fun triggerFeedback(priority: SoundType.Priority) {
         scope.launch {
             if (settingsRepository.isVibrationEnabled.first()) {
-                vibrate()
+                vibrate(priority)
             }
             if (settingsRepository.isFlashlightEnabled.first()) {
                 strobe()
@@ -108,7 +108,7 @@ class AlertManagerImpl(
         }
     }
 
-    private fun vibrate() {
+    private fun vibrate(priority: SoundType.Priority) {
         val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
             vibratorManager.defaultVibrator
@@ -117,6 +117,14 @@ class AlertManagerImpl(
             context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
 
-        vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE))
+        // Priority-based waveform patterns
+        val pattern = when (priority) {
+            SoundType.Priority.CRITICAL -> longArrayOf(0, 200, 100, 200, 100, 500, 100, 200) // Intense repeated
+            SoundType.Priority.HIGH -> longArrayOf(0, 300, 100, 300, 100, 300) // Triple pulse
+            SoundType.Priority.NORMAL -> longArrayOf(0, 400, 200, 400) // Double pulse
+            SoundType.Priority.LOW -> longArrayOf(0, 300) // Single pulse
+        }
+
+        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 }

@@ -1,6 +1,7 @@
 package com.typ.hearforme.presentation.communication
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,7 +16,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Call
@@ -25,16 +25,11 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,7 +46,6 @@ fun CommunicationScreen(
     viewModel: CommunicationViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var inputText by remember { mutableStateOf("") }
 
     Scaffold(
         topBar = {
@@ -74,14 +68,19 @@ fun CommunicationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             // Transcription area
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f), RoundedCornerShape(24.dp))
+                    .background(
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                        RoundedCornerShape(24.dp)
+                    )
                     .padding(20.dp)
                     .verticalScroll(rememberScrollState())
             ) {
@@ -90,7 +89,9 @@ fun CommunicationScreen(
                         text = if (uiState.transcribedText.isEmpty() && uiState.partialTranscription.isEmpty())
                             "Tap the mic and start speaking Arabic..." else uiState.transcribedText,
                         style = MaterialTheme.typography.headlineSmall,
-                        color = if (uiState.transcribedText.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                        color = if (uiState.transcribedText.isEmpty())
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Start
                     )
                     if (uiState.partialTranscription.isNotEmpty()) {
@@ -104,38 +105,10 @@ fun CommunicationScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Text-to-Speech input
-            OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Type to speak aloud...") },
-                shape = RoundedCornerShape(32.dp),
-                trailingIcon = {
-                    IconButton(
-                        onClick = {
-                            if (inputText.isNotEmpty()) {
-                                viewModel.speak(inputText)
-                                inputText = ""
-                            }
-                        },
-                        enabled = inputText.isNotEmpty()
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.Send, contentDescription = "Speak", tint = PrimaryBlue)
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                    focusedBorderColor = PrimaryBlue,
-                )
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Mic button
-            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 FloatingActionButton(
                     onClick = {
                         if (uiState.isListening) viewModel.stopListening() else viewModel.startListening()
@@ -146,7 +119,6 @@ fun CommunicationScreen(
                     contentColor = Color.White
                 ) {
                     Icon(
-                        // todo: use proper animated icons later.
                         imageVector = if (uiState.isListening) {
                             Icons.Default.Call
                         } else {
@@ -158,9 +130,9 @@ fun CommunicationScreen(
                 }
 
                 if (uiState.isListening) {
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         "Listening...",
-                        modifier = Modifier.padding(top = 100.dp),
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue,
                     )

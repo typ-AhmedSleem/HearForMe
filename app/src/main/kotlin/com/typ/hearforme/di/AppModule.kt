@@ -18,6 +18,7 @@ import com.typ.hearforme.domain.repository.SettingsRepository
 import com.typ.hearforme.manager.AlertManagerImpl
 import com.typ.hearforme.presentation.communication.CommunicationViewModel
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
+import com.typ.hearforme.presentation.main.MainViewModel
 import com.typ.hearforme.presentation.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -35,6 +36,7 @@ val appModule = module {
     single<AlertManager> { AlertManagerImpl(androidContext(), get(), get()) }
 
     // Presentation
+    viewModel { MainViewModel(get()) }
     viewModel { DashboardViewModel(get(), get()) }
     viewModel { CommunicationViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }

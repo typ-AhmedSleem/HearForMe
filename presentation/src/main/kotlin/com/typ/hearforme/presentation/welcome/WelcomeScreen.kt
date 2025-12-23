@@ -177,13 +177,17 @@ fun WelcomeGraphics() {
             modifier = Modifier
                 .offset(x = (-80).dp, y = (-100).dp)
                 .background(Color.White, RoundedCornerShape(16.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .shadow(2.dp, RoundedCornerShape(16.dp)),
+                .shadow(2.dp, RoundedCornerShape(16.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("ALERT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-                Text("Visual", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    "ALERT\nVisual",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
 
@@ -191,13 +195,18 @@ fun WelcomeGraphics() {
             modifier = Modifier
                 .offset(x = (80).dp, y = (60).dp)
                 .background(Color.White, RoundedCornerShape(16.dp))
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-                .shadow(2.dp, RoundedCornerShape(16.dp)),
+                .shadow(2.dp, RoundedCornerShape(16.dp))
+                .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("FEEL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
-                Text("Haptics", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+//                Text("FEEL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
+                Text(
+                    "FEEL\nHaptics",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

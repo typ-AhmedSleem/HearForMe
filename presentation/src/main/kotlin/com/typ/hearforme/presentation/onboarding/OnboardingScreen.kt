@@ -25,19 +25,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 
+internal const val ONBOARDING_LAST_STEP_INDEX = 4
+
 @Composable
 fun OnboardingScreen(
     step: Int,
     onNext: () -> Unit,
 ) {
-    LocalContext.current
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -69,61 +69,74 @@ fun OnboardingScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Graphic Placeholder
-        Box(
+        Column(
             modifier = Modifier
-                .size(240.dp)
-                .background(PrimaryBlue.copy(alpha = 0.1f), CircleShape),
-            contentAlignment = Alignment.Center
+                .weight(1f)
+                .padding(
+                    vertical = 0.dp
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(
+                alignment = Alignment.CenterVertically,
+                space = 0.dp,
+            ),
         ) {
-            Text(
-                text = when (step) {
-                    1 -> "🔍"
-                    2 -> "🔔"
-                    3 -> "🛡️"
-                    else -> "🚀"
-                },
-                fontSize = 80.sp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(64.dp))
-
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = description,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-
-        Spacer(modifier = Modifier.height(64.dp))
-
-        // Progress Dots
-        Row {
-            repeat(4) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .padding(horizontal = 2.dp)
-                        .background(
-                            if (index + 1 == step) PrimaryBlue else Color.LightGray,
-                            CircleShape
-                        )
+            // Graphic Placeholder
+            Box(
+                modifier = Modifier
+                    .size(240.dp)
+                    .background(PrimaryBlue.copy(alpha = 0.1f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = when (step) {
+                        1 -> "🔍"
+                        2 -> "🔔"
+                        3 -> "🛡️"
+                        else -> "🚀"
+                    },
+                    fontSize = 80.sp
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(64.dp))
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+
+            Spacer(modifier = Modifier.height(64.dp))
+
+            // Progress Dots
+            Row {
+                repeat(ONBOARDING_LAST_STEP_INDEX) { index ->
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .padding(horizontal = 2.dp)
+                            .background(
+                                if (index + 1 == step) PrimaryBlue else Color.LightGray,
+                                CircleShape
+                            )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+        }
 
         Button(
             onClick = {
@@ -148,10 +161,12 @@ fun OnboardingScreen(
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
         ) {
             Text(
-                if (step < 4) "Next" else "Get Started",
+                if (step >= ONBOARDING_LAST_STEP_INDEX) "Get Started" else "Next",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }
+
+        Spacer(Modifier.height(32.dp))
     }
 }

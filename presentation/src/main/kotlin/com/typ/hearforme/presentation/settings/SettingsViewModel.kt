@@ -53,7 +53,7 @@ class SettingsViewModel(
 
         // For simplicity, we create settings for all known types
         // In a real app, this would be more dynamic
-        val types = SoundType.entries.filter { it != SoundType.UNKNOWN }
+        val types = SoundType.explicitTypes
 
         combine(
             types.map { type ->

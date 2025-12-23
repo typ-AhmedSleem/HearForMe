@@ -3,6 +3,7 @@ package com.typ.hearforme.presentation.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -13,6 +14,8 @@ import com.typ.hearforme.presentation.communication.CommunicationScreen
 import com.typ.hearforme.presentation.dashboard.DashboardScreen
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.history.HistoryScreen
+import com.typ.hearforme.presentation.main.MainViewModel
+import com.typ.hearforme.presentation.onboarding.ONBOARDING_LAST_STEP_INDEX
 import com.typ.hearforme.presentation.onboarding.OnboardingScreen
 import com.typ.hearforme.presentation.settings.SettingsScreen
 import com.typ.hearforme.presentation.welcome.WelcomeScreen
@@ -33,15 +36,18 @@ sealed class Screen(val route: String) {
 @Composable
 fun MainNavigation(
     navController: NavHostController = rememberNavController(),
-    viewModel: DashboardViewModel = koinViewModel(),
+    dashboardViewModel: DashboardViewModel = koinViewModel(),
+    mainViewModel: MainViewModel = koinViewModel(),
 ) {
-    val activeAlert by viewModel.activeAlert.collectAsStateWithLifecycle()
-    val history by viewModel.history.collectAsStateWithLifecycle()
+    val activeAlert by dashboardViewModel.activeAlert.collectAsStateWithLifecycle()
+    val history by dashboardViewModel.history.collectAsStateWithLifecycle()
+    val hasCompletedOnboarding by mainViewModel.hasCompletedOnboarding.collectAsStateWithLifecycle()
 
     Box {
         NavHost(
             navController = navController,
-            startDestination = Screen.Welcome.route
+            contentAlignment = Alignment.Center,
+            startDestination = if (hasCompletedOnboarding) Screen.Dashboard.route else Screen.Welcome.route
         ) {
             composable(Screen.Welcome.route) {
                 WelcomeScreen(
@@ -56,9 +62,10 @@ fun MainNavigation(
                 OnboardingScreen(
                     step = step,
                     onNext = {
-                        if (step < 4) {
+                        if (step < ONBOARDING_LAST_STEP_INDEX) {
                             navController.navigate(Screen.Onboarding.createRoute(step + 1))
                         } else {
+                            mainViewModel.setOnboardingCompleted()
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.Welcome.route) { inclusive = true }
                             }
@@ -68,7 +75,7 @@ fun MainNavigation(
             }
 
             composable(Screen.Dashboard.route) {
-                val rms by viewModel.rms.collectAsStateWithLifecycle()
+                val rms by dashboardViewModel.rms.collectAsStateWithLifecycle()
                 DashboardScreen(
                     currentEvent = activeAlert,
                     history = history,
@@ -83,7 +90,7 @@ fun MainNavigation(
                         navController.navigate(Screen.Communication.route)
                     },
                     onSOSClick = {
-                        viewModel.triggerSOS()
+                        dashboardViewModel.triggerSOS()
                     }
                 )
             }
@@ -111,7 +118,7 @@ fun MainNavigation(
         activeAlert?.let { alert ->
             AlertOverlay(
                 event = alert,
-                onDismiss = { viewModel.dismissAlert() }
+                onDismiss = { dashboardViewModel.dismissAlert() }
             )
         }
     }

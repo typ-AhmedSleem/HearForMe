@@ -2,6 +2,7 @@ package com.typ.hearforme.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -24,7 +25,6 @@ class SoundDetectionService : Service() {
     private val policy: DetectionPolicy by inject()
     private val alertManager: AlertManager by inject()
 
-    // Using simple job for now
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var lastAlertTime = 0L
 
@@ -37,6 +37,13 @@ class SoundDetectionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Handle stop action
+        if (intent?.action == ACTION_STOP) {
+            Log.d("HearForMe", "Stop action received, stopping service")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         classifier.start()
 
         serviceScope.launch {
@@ -44,6 +51,7 @@ class SoundDetectionService : Service() {
                 Log.d("HearForMe", "Detected: ${event.type.displayName} (${event.confidence})")
                 if (policy.shouldAlert(event, lastAlertTime)) {
                     alertManager.onSoundDetected(event)
+                    lastAlertTime = event.timestamp
                 }
             }
         }
@@ -55,6 +63,7 @@ class SoundDetectionService : Service() {
         super.onDestroy()
         classifier.stop()
         serviceScope.cancel()
+        Log.d("HearForMe", "Service destroyed")
     }
 
     private fun startForegroundService() {
@@ -64,13 +73,26 @@ class SoundDetectionService : Service() {
         val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
 
+        // Stop action intent
+        val stopIntent = Intent(this, SoundDetectionService::class.java).apply {
+            action = ACTION_STOP
+        }
+        val stopPendingIntent = PendingIntent.getService(
+            this, 0, stopIntent, PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setContentTitle("Hear for Me is listening")
             .setContentText("Detecting sounds in background...")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(android.R.drawable.ic_media_pause, "Stop Detection", stopPendingIntent)
             .build()
 
         startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
+    }
+
+    companion object {
+        const val ACTION_STOP = "com.typ.hearforme.ACTION_STOP_DETECTION"
     }
 }
