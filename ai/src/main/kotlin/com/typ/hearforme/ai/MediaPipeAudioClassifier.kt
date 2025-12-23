@@ -150,8 +150,8 @@ class MediaPipeAudioClassifier(
         val topResultScore = topResult?.score() ?: 0f
         val topResultLabel = topResult?.categoryName() ?: textUnknownSound
         if (lastLabel != topResultLabel) {
-            lastLabel = topResultLabel
-            Log.d("HearForMe", "Top result: $lastLabel ($topResultScore)")
+//            lastLabel = topResultLabel
+            Log.d("HearForMe", "Top result: $topResultLabel ($topResultScore)")
             if (topResultScore > threshold) {
                 val soundType = SoundType.fromLabel(topResultLabel)
                 if (soundType !is SoundType.Generic) {

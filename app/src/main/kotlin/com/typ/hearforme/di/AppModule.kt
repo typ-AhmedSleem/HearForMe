@@ -12,7 +12,7 @@ import com.typ.hearforme.domain.communication.SpeechToTextEngine
 import com.typ.hearforme.domain.communication.TextToSpeechEngine
 import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.manager.HapticEngine
-import com.typ.hearforme.domain.policy.DefaultDetectionPolicy
+import com.typ.hearforme.domain.policy.DebouncedDetectionPolicy
 import com.typ.hearforme.domain.policy.DetectionPolicy
 import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
@@ -48,7 +48,7 @@ val appModule = module {
     single<HistoryRepository> { HistoryRepositoryImpl(get()) }
 
     // AI
-    single<DetectionPolicy> { DefaultDetectionPolicy() }
+    single<DetectionPolicy> { DebouncedDetectionPolicy() }
     single<AudioClassifier> { MediaPipeAudioClassifier(androidContext()) }
 
     // Communication
