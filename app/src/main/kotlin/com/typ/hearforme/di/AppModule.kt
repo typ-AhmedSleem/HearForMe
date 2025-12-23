@@ -9,6 +9,7 @@ import com.typ.hearforme.domain.policy.DetectionPolicy
 import com.typ.hearforme.domain.repository.SettingsRepository
 import com.typ.hearforme.manager.AlertManagerImpl
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
+import com.typ.hearforme.presentation.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -20,6 +21,7 @@ val appModule = module {
 
     // Presentation
     viewModel { DashboardViewModel(get()) }
+    viewModel { SettingsViewModel(get()) }
 
     // Data
     single<SettingsRepository> { SettingsRepositoryImpl(androidContext()) }
