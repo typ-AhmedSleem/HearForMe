@@ -1,5 +1,13 @@
 package com.typ.hearforme.presentation.alerts
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
+import androidx.compose.animation.core.InfiniteRepeatableSpec
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,6 +31,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -34,26 +43,44 @@ import com.typ.hearforme.designsystem.theme.AlertHigh
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.presentation.dashboard.getEmojiForType
 
+
 @Composable
 fun AlertOverlay(
     event: SoundEvent,
     onDismiss: () -> Unit,
 ) {
-    val bgColor = when (event.confidence > 0.8f) {
-        true -> AlertHigh.copy(alpha = 0.95f)
-        false -> Color.Black.copy(alpha = 0.9f)
+    val infiniteTransition = rememberInfiniteTransition(label = "FlashTransition")
+
+    val baseColor = when (event.confidence > 0.8f) {
+        true -> AlertHigh
+        false -> Color.Black
     }
+
+    val flashColor by infiniteTransition.animateColor(
+        initialValue = baseColor.copy(alpha = 0.8f),
+        targetValue = baseColor.copy(alpha = 1.0f),
+        animationSpec = InfiniteRepeatableSpec(
+            animation = tween(500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "FlashColor"
+    )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(bgColor),
+            .background(flashColor),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp)
+        AnimatedVisibility(
+            visible = true, // It's always true while AlertOverlay is in the composition
+            enter = scaleIn(),
+            exit = scaleOut()
         ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
+            ) {
             // Urgent Badge
             Surface(
                 shape = RoundedCornerShape(20.dp),
@@ -141,5 +168,6 @@ fun AlertOverlay(
         ) {
             Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
         }
+    }
     }
 }

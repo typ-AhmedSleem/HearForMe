@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import kotlin.math.sqrt
 import com.typ.hearforme.domain.classifier.AudioClassifier as DomainAudioClassifier
 
 class MediaPipeAudioClassifier(
@@ -36,6 +37,13 @@ class MediaPipeAudioClassifier(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     override val events = _events.asSharedFlow()
+
+    private val _rms = MutableSharedFlow<Float>(
+        replay = 1,
+        extraBufferCapacity = 5,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    override val rms = _rms.asSharedFlow()
 
     private val scope = CoroutineScope(Dispatchers.Default)
 
@@ -100,11 +108,24 @@ class MediaPipeAudioClassifier(
             {
                 tensorAudio.load(record)
 
+                // Calculate RMS for visualizer
+                val buffer = tensorAudio.buffer
+                var sum = 0.0
+                val limit = 15600 // YAMNet buffer size
+                for (i in 0 until limit) {
+                    val sample = buffer[i]
+                    sum += (sample.toDouble() * sample.toDouble())
+                }
+                val rmsValue = sqrt(sum / limit.toDouble()).toFloat()
+                scope.launch {
+                    _rms.emit(rmsValue)
+                }
+
                 val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
                 processResults(results)
             },
             0,
-            500,
+            100, // Faster polling for smoother visualizer
             TimeUnit.MILLISECONDS
         )
     }

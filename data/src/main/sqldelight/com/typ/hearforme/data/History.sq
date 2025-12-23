@@ -1,0 +1,17 @@
+CREATE TABLE SoundEventEntity (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    confidence REAL NOT NULL,
+    timestamp INTEGER NOT NULL,
+    metadata TEXT
+);
+
+selectAll:
+SELECT * FROM SoundEventEntity ORDER BY timestamp DESC;
+
+insertEvent:
+INSERT INTO SoundEventEntity(type, confidence, timestamp, metadata)
+VALUES (?, ?, ?, ?);
+
+deleteAll:
+DELETE FROM SoundEventEntity;

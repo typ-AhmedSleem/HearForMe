@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.sqldelight)
 }
 
 android {
@@ -26,10 +27,20 @@ android {
     }
 }
 
+sqldelight {
+    databases {
+        create("HistoryDatabase") {
+            packageName.set("com.typ.hearforme.data")
+        }
+    }
+}
+
 dependencies {
     implementation(project(":domain"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.koin.android)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.sqldelight.android)
+    implementation(libs.sqldelight.coroutines)
 }

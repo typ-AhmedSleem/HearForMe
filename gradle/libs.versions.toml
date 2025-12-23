@@ -18,6 +18,7 @@ litertSupportApi = "1.4.1"
 
 [libraries]
 androidx-lifecycle-viewmodelCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodelKtx = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "androidx-work" }
@@ -60,9 +61,10 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 
 [bundles]
 kmpUtils = ["kmputils-common", "kmputils-compose"]
 androidxLifecycle = ["androidx-lifecycle-runtimeCompose", "androidx-lifecycle-viewmodelCompose"]
 koin = ["koin-core", "koin-compose", "koin-compose-viewmodel", "koin-compose-viewmodel-navigation"]
-sqldelight = ["sqldelight-runtime", "sqldelight-coroutines"]
+sqldelight = ["sqldelight-runtime", "sqldelight-coroutines", "sqldelight-android"]

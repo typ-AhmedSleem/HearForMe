@@ -9,4 +9,5 @@ interface AlertManager {
 
     fun onSoundDetected(event: SoundEvent)
     fun dismissAlert()
+    fun triggerSOS()
 }

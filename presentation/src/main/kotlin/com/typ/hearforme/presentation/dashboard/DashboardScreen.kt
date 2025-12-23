@@ -1,5 +1,10 @@
 package com.typ.hearforme.presentation.dashboard
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,12 +55,14 @@ import com.typ.hearforme.domain.model.SoundType
 fun DashboardScreen(
     currentEvent: SoundEvent? = null,
     history: List<SoundEvent> = emptyList(),
+    rms: Float = 0f,
     onNavigateToSettings: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToCommunication: () -> Unit = {},
+    onSOSClick: () -> Unit = {},
 ) {
     Scaffold(
-        topBar = { DashboardTopBar(onNavigateToSettings) },
+        topBar = { DashboardTopBar(onNavigateToSettings, onSOSClick) },
         bottomBar = {
             DashboardBottomBar(
                 onSettingsClick = onNavigateToSettings,
@@ -77,7 +85,10 @@ fun DashboardScreen(
                     .wrapContentHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                SoundVisualizer(currentEvent)
+                SoundVisualizer(
+                    currentEvent,
+                    rms = rms
+                )
             }
 
             // History Section Header
@@ -107,7 +118,7 @@ fun DashboardScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 24.dp)
             ) {
-                items(history) { event ->
+                items(history, key = { it.timestamp }) { event ->
                     SoundHistoryItem(event)
                 }
 
@@ -123,7 +134,10 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardTopBar(onSettingsClick: () -> Unit = {}) {
+fun DashboardTopBar(
+    onSettingsClick: () -> Unit = {},
+    onSOSClick: () -> Unit = {},
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -173,6 +187,10 @@ fun DashboardTopBar(onSettingsClick: () -> Unit = {}) {
 
             Spacer(modifier = Modifier.width(12.dp))
 
+            IconButton(onClick = onSOSClick) {
+                Text("🚨", fontSize = 24.sp)
+            }
+
             IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Notifications, contentDescription = null, tint = OnBackground)
             }
@@ -181,10 +199,22 @@ fun DashboardTopBar(onSettingsClick: () -> Unit = {}) {
 }
 
 @Composable
-fun SoundVisualizer(event: SoundEvent?) {
+fun SoundVisualizer(event: SoundEvent?, rms: Float) {
+    val pulseScale by animateFloatAsState(
+        targetValue = 1f + (rms * 5f).coerceAtMost(0.5f),
+        label = "Pulse"
+    )
+
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center) {
-            // Rings
+            // Pulse Ring
+            Surface(
+                modifier = Modifier.size(220.dp * pulseScale),
+                shape = CircleShape,
+                color = PrimaryBlue.copy(alpha = 0.1f)
+            ) {}
+
+            // Inner Ring
             Surface(
                 modifier = Modifier.size(220.dp),
                 shape = CircleShape,
@@ -192,10 +222,16 @@ fun SoundVisualizer(event: SoundEvent?) {
                 shadowElevation = 4.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    if (event == null) {
-                        Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
-                    } else {
-                        Text(getEmojiForType(event.type), fontSize = 80.sp)
+                    AnimatedContent(
+                        targetState = event,
+                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        label = "VisualizerContent"
+                    ) { targetEvent ->
+                        if (targetEvent == null) {
+                            Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
+                        } else {
+                            Text(getEmojiForType(targetEvent.type), fontSize = 80.sp)
+                        }
                     }
                 }
             }

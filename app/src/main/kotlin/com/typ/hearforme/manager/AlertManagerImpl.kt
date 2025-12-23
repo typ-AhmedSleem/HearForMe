@@ -8,46 +8,76 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.model.SoundEvent
+import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class AlertManagerImpl(
     private val context: Context,
     private val settingsRepository: SettingsRepository,
+    private val historyRepository: HistoryRepository,
 ) : AlertManager {
 
     private val _activeAlert = MutableStateFlow<SoundEvent?>(null)
     override val activeAlert = _activeAlert.asStateFlow()
 
-    private val _history = MutableStateFlow<List<SoundEvent>>(emptyList())
-    override val history = _history.asStateFlow()
+    override val history: StateFlow<List<SoundEvent>> = historyRepository.getHistory()
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO),
+            started = SharingStarted.Eagerly,
+            initialValue = emptyList()
+        )
 
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onSoundDetected(event: SoundEvent) {
-        // Update history
-        val currentHistory = _history.value.toMutableList()
-        currentHistory.add(0, event)
-        if (currentHistory.size > 50) currentHistory.removeAt(50)
-        _history.value = currentHistory
+        // Save to persistent history
+        scope.launch {
+            historyRepository.saveEvent(event)
+        }
 
         // Check if we should show overlay (High/Critical)
-        // For now, any event with confidence > 0.7 triggers it
         if (event.confidence > 0.7f) {
             _activeAlert.value = event
-
-            // Trigger feedback
             triggerFeedback()
         }
     }
 
     override fun dismissAlert() {
         _activeAlert.value = null
+    }
+
+    override fun triggerSOS() {
+        val sosEvent = SoundEvent(
+            type = SoundType.ALARM_SIREN,
+            confidence = 1.0f,
+            timestamp = System.currentTimeMillis()
+        )
+        _activeAlert.value = sosEvent
+
+        // Intense strobe
+        scope.launch {
+            val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
+            repeat(10) {
+                cameraManager.setTorchMode(cameraId, true)
+                kotlinx.coroutines.delay(50)
+                cameraManager.setTorchMode(cameraId, false)
+                kotlinx.coroutines.delay(50)
+            }
+        }
+
+        // Continuous vibration
+        vibrate()
     }
 
     private fun triggerFeedback() {

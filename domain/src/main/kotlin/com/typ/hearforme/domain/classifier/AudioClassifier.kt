@@ -6,10 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface AudioClassifier {
     
     val events: Flow<SoundEvent>
+    val rms: Flow<Float>
     
     fun start()
     fun stop()
-    
-    // Optional: Pass raw data if we manage mic separately
-    // fun classify(audioData: ByteArray)
 }
