@@ -3,8 +3,8 @@ package com.typ.hearforme
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -35,9 +35,16 @@ class MainActivity : ComponentActivity() {
             val isDetectionEnabled by viewModel.isDetectionEnabled.collectAsStateWithLifecycle()
 
             LaunchedEffect(hasCompletedOnboarding, isDetectionEnabled) {
-                if (hasCompletedOnboarding && isDetectionEnabled && hasPermissions()) {
+                val canStartService = hasCompletedOnboarding && isDetectionEnabled && hasPermissions()
+                Log.d(
+                    "HearForMe",
+                    "Can start service: result='$canStartService' | hasCompletedOnboarding=$hasCompletedOnboarding | isDetectionEnabled=$isDetectionEnabled | hasPermissions=${hasPermissions()}"
+                )
+                if (canStartService) {
+                    Log.d("HearForMe", "Starting service...")
                     startDetectionService()
                 } else {
+                    Log.d("HearForMe", "Stopping service...")
                     stopDetectionService()
                 }
             }
@@ -56,12 +63,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startDetectionService() {
-        val intent = Intent(this, SoundDetectionService::class.java)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(intent)
-        } else {
-            startService(intent)
-        }
+        startService(Intent(this, SoundDetectionService::class.java))
     }
 
     private fun stopDetectionService() {
