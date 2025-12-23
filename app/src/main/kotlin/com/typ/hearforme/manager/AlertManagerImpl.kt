@@ -13,6 +13,7 @@ import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +57,10 @@ class AlertManagerImpl(
         _activeAlert.value = null
     }
 
+    override fun triggerAlertFeedback(event: SoundEvent) {
+        triggerFeedback(event.type.priority)
+    }
+
     override fun triggerSOS() {
         val sosEvent = SoundEvent(
             type = SoundType.AlarmSiren,
@@ -70,9 +75,9 @@ class AlertManagerImpl(
             val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
             repeat(10) {
                 cameraManager.setTorchMode(cameraId, true)
-                kotlinx.coroutines.delay(50)
+                delay(50)
                 cameraManager.setTorchMode(cameraId, false)
-                kotlinx.coroutines.delay(50)
+                delay(50)
             }
         }
 
@@ -98,9 +103,9 @@ class AlertManagerImpl(
                 val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
                 repeat(5) {
                     cameraManager.setTorchMode(cameraId, true)
-                    kotlinx.coroutines.delay(100)
+                    delay(100)
                     cameraManager.setTorchMode(cameraId, false)
-                    kotlinx.coroutines.delay(100)
+                    delay(100)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
