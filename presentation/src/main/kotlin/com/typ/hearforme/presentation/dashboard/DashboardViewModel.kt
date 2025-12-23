@@ -72,6 +72,13 @@ class DashboardViewModel(
         }
     }
 
+    fun disableDetection() {
+        viewModelScope.launch {
+            settingsRepository.setDetectionEnabled(false)
+            performHapticFeedback()
+        }
+    }
+
     fun triggerPermissionRequest() {
         viewModelScope.launch {
             _requestPermissionTrigger.emit(Unit)
@@ -95,5 +102,9 @@ class DashboardViewModel(
 
     fun performHapticFeedback() {
         hapticEngine.performInteractionFeedback()
+    }
+
+    fun clearHistory() {
+        viewModelScope.launch { alertManager.clearHistory() }
     }
 }
