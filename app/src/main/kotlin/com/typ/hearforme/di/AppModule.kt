@@ -35,7 +35,7 @@ val appModule = module {
     single<AlertManager> { AlertManagerImpl(androidContext(), get(), get()) }
 
     // Presentation
-    viewModel { DashboardViewModel(get()) }
+    viewModel { DashboardViewModel(get(), get()) }
     viewModel { CommunicationViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
 
