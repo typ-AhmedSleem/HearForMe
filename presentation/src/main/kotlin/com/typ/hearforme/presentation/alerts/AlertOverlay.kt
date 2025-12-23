@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
-import com.typ.hearforme.presentation.dashboard.getEmojiForType
 import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -94,7 +93,7 @@ fun AlertOverlay(
                         .background(Color.White.copy(alpha = 0.15f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(getEmojiForType(event.type), fontSize = 100.sp)
+                    Text(event.type.emoji, fontSize = 100.sp)
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
