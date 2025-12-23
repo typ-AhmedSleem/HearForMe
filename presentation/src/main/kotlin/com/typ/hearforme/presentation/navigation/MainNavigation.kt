@@ -13,6 +13,7 @@ import com.typ.hearforme.presentation.communication.CommunicationScreen
 import com.typ.hearforme.presentation.dashboard.DashboardScreen
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.history.HistoryScreen
+import com.typ.hearforme.presentation.main.MainViewModel
 import com.typ.hearforme.presentation.onboarding.OnboardingScreen
 import com.typ.hearforme.presentation.settings.SettingsScreen
 import com.typ.hearforme.presentation.welcome.WelcomeScreen
@@ -33,15 +34,17 @@ sealed class Screen(val route: String) {
 @Composable
 fun MainNavigation(
     navController: NavHostController = rememberNavController(),
-    viewModel: DashboardViewModel = koinViewModel(),
+    dashboardViewModel: DashboardViewModel = koinViewModel(),
+    mainViewModel: MainViewModel = koinViewModel(),
 ) {
-    val activeAlert by viewModel.activeAlert.collectAsStateWithLifecycle()
-    val history by viewModel.history.collectAsStateWithLifecycle()
+    val activeAlert by dashboardViewModel.activeAlert.collectAsStateWithLifecycle()
+    val history by dashboardViewModel.history.collectAsStateWithLifecycle()
+    val hasCompletedOnboarding by mainViewModel.hasCompletedOnboarding.collectAsStateWithLifecycle()
 
     Box {
         NavHost(
             navController = navController,
-            startDestination = Screen.Welcome.route
+            startDestination = if (hasCompletedOnboarding) Screen.Dashboard.route else Screen.Welcome.route
         ) {
             composable(Screen.Welcome.route) {
                 WelcomeScreen(
@@ -68,7 +71,7 @@ fun MainNavigation(
             }
 
             composable(Screen.Dashboard.route) {
-                val rms by viewModel.rms.collectAsStateWithLifecycle()
+                val rms by dashboardViewModel.rms.collectAsStateWithLifecycle()
                 DashboardScreen(
                     currentEvent = activeAlert,
                     history = history,
@@ -83,7 +86,7 @@ fun MainNavigation(
                         navController.navigate(Screen.Communication.route)
                     },
                     onSOSClick = {
-                        viewModel.triggerSOS()
+                        dashboardViewModel.triggerSOS()
                     }
                 )
             }
@@ -111,7 +114,7 @@ fun MainNavigation(
         activeAlert?.let { alert ->
             AlertOverlay(
                 event = alert,
-                onDismiss = { viewModel.dismissAlert() }
+                onDismiss = { dashboardViewModel.dismissAlert() }
             )
         }
     }
