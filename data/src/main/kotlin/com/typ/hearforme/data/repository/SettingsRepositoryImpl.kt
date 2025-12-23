@@ -37,7 +37,25 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
     override val isVibrationEnabled: Flow<Boolean> = context.dataStore.data
         .map { it[KEY_VIBRATION_ENABLED] ?: true }
 
-    suspend fun setDetectionEnabled(enabled: Boolean) {
+    override suspend fun setDetectionEnabled(enabled: Boolean) {
         context.dataStore.edit { it[KEY_DETECTION_ENABLED] = enabled }
+    }
+
+    override suspend fun setSoundTypeEnabled(type: SoundType, enabled: Boolean) {
+        val key = booleanPreferencesKey("sound_enabled_${type.name}")
+        context.dataStore.edit { it[key] = enabled }
+    }
+
+    override suspend fun setSensitivity(type: SoundType, sensitivity: Float) {
+        val key = floatPreferencesKey("sound_sensitivity_${type.name}")
+        context.dataStore.edit { it[key] = sensitivity }
+    }
+
+    override suspend fun setFlashlightEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_FLASHLIGHT_ENABLED] = enabled }
+    }
+
+    override suspend fun setVibrationEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[KEY_VIBRATION_ENABLED] = enabled }
     }
 }
