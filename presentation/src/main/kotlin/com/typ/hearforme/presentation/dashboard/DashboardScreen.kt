@@ -399,10 +399,10 @@ fun DashboardBottomBar(
 }
 
 fun getEmojiForType(type: SoundType): String = when (type) {
-    SoundType.BABY_CRYING -> "👶"
-    SoundType.DOORBELL -> "🏠"
-    SoundType.ALARM_SIREN -> "🚨"
-    SoundType.DOG_BARKING -> "🐕"
-    SoundType.SMOKE_ALARM -> "🔥"
+    SoundType.BabyCrying -> "👶"
+    SoundType.Doorbell -> "🏠"
+    SoundType.AlarmSiren -> "🚨"
+    SoundType.DogBarking -> "🐕"
+    SoundType.SmokeAlarm -> "🔥"
     else -> "❓"
 }
