@@ -18,4 +18,6 @@ interface AlertManager {
 
     /** Triggers the emergency SOS flow */
     fun triggerSOS()
+
+    suspend fun clearHistory()
 }

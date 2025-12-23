@@ -45,10 +45,14 @@ class AlertManagerImpl(
         }
 
         // Check if we should show overlay (High/Critical)
-        if (event.confidence > 0.7f) {
+        if (event.type.priority >= SoundType.Priority.HIGH) {
             _activeAlert.value = event
             triggerFeedback(event.type.priority)
         }
+    }
+
+    override suspend fun clearHistory() {
+        historyRepository.clearHistory()
     }
 
     override fun dismissAlert() {
@@ -59,6 +63,21 @@ class AlertManagerImpl(
         triggerFeedback(event.type.priority)
     }
 
+    /**
+     * Triggers a manual SOS alert.
+     *
+     * This function is designed to be invoked directly by the user in an emergency situation.
+     * It performs the following actions to maximize attention:
+     * 1. Creates a `SoundEvent` of type `AlarmSiren` with maximum confidence and sets it as the
+     *    `activeAlert`, which will typically display a full-screen alert UI.
+     * 2. Initiates an intense, rapid flashlight strobe effect (10 flashes) to provide a strong
+     *    visual cue. This is more aggressive than the standard alert strobe.
+     * 3. Triggers a "CRITICAL" priority haptic feedback pattern via the `hapticEngine`,
+     *    providing a powerful tactile alert.
+     *
+     * This function bypasses normal sound detection and user settings for feedback, ensuring that
+     * maximum visual and haptic feedback is always provided when the user requests SOS.
+     */
     override fun triggerSOS() {
         val sosEvent = SoundEvent(
             type = SoundType.AlarmSiren,
@@ -83,6 +102,18 @@ class AlertManagerImpl(
         hapticEngine.vibrateForPriority(SoundType.Priority.CRITICAL)
     }
 
+    /**
+     * Triggers feedback mechanisms based on user settings and the priority of a detected sound.
+     *
+     * This function launches a coroutine to perform the feedback actions asynchronously. It checks
+     * the user's settings to determine whether to activate haptic feedback (vibration) and/or
+     * visual feedback (flashlight strobe).
+     *
+     * @param priority The priority level of the sound event, which determines the intensity
+     * and pattern of the feedback.
+     * @see HapticEngine.vibrateForPriority
+     * @see strobe
+     */
     private fun triggerFeedback(priority: SoundType.Priority) {
         scope.launch {
             if (settingsRepository.isVibrationEnabled.first()) {
@@ -94,6 +125,15 @@ class AlertManagerImpl(
         }
     }
 
+    /**
+     * Triggers a strobe effect using the device's flashlight.
+     *
+     * This function accesses the camera service to control the torch (flashlight). It rapidly
+     * turns the flashlight on and off five times with a 100ms delay between each state change,
+     * creating a flashing or strobing effect. This is intended to serve as a visual alert.
+     * The operation is performed within a coroutine on a background thread. Any exceptions,
+     * such as issues accessing the camera, are caught and printed to the stack trace.
+     */
     private fun strobe() {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         scope.launch {
