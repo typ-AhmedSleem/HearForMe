@@ -48,10 +48,11 @@ import com.typ.hearforme.domain.model.SoundType
 fun DashboardScreen(
     currentEvent: SoundEvent? = null,
     history: List<SoundEvent> = emptyList(),
+    onNavigateToSettings: () -> Unit = {},
 ) {
     Scaffold(
         topBar = { DashboardTopBar() },
-        bottomBar = { DashboardBottomBar() },
+        bottomBar = { DashboardBottomBar(onNavigateToSettings) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
@@ -308,7 +309,7 @@ fun MockSoundHistoryItem(index: Int) {
 }
 
 @Composable
-fun DashboardBottomBar() {
+fun DashboardBottomBar(onSettingsClick: () -> Unit = {}) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -339,7 +340,7 @@ fun DashboardBottomBar() {
                 Text("🕓", fontSize = 24.sp)
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Settings, contentDescription = null, tint = TextSecondary)
             }
         }
