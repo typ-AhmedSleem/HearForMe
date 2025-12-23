@@ -27,7 +27,7 @@ sealed class SoundType(
     )
 
     data object AlarmSiren : SoundType(
-        displayName = "Alarm/Siren",
+        displayName = "Siren",
         label = "siren",
         priority = Priority.CRITICAL,
         color = 0xFFF44336,
