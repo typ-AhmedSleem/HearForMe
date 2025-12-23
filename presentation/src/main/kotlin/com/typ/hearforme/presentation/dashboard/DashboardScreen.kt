@@ -7,11 +7,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -31,6 +34,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -47,7 +51,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -61,10 +65,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.typ.hearforme.designsystem.theme.OnBackground
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.TextSecondary
 import com.typ.hearforme.domain.model.SoundEvent
+import com.typ.hearforme.domain.model.SoundType
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -75,9 +81,9 @@ fun DashboardScreen(
     onNavigateToCommunication: () -> Unit = {},
     onSOSClick: () -> Unit = {},
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val history by viewModel.history.collectAsState()
-    val rms by viewModel.rms.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
+    val rms by viewModel.rms.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -138,8 +144,8 @@ fun DashboardScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(if (history.isEmpty()) 1.5f else 1f)
-                    .wrapContentHeight(),
+                    .weight(1f)
+                    .animateContentSize(),
                 contentAlignment = Alignment.Center
             ) {
                 SoundVisualizer(
@@ -149,6 +155,12 @@ fun DashboardScreen(
                         when (uiState) {
                             is DashboardUiState.MicAccessRequired -> viewModel.triggerPermissionRequest()
                             is DashboardUiState.ServiceOffline -> viewModel.enableDetection()
+                            is DashboardUiState.Identified -> {
+                                if ((uiState as DashboardUiState.Identified).event.type is SoundType.SomeoneSpeaking) {
+                                    viewModel.disableDetection()
+                                    onNavigateToCommunication()
+                                }
+                            }
                             else -> viewModel.performHapticFeedback()
                         }
                     }
@@ -169,7 +181,7 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "PAST HOUR",
+                            "Most recent",
                             style = MaterialTheme.typography.labelLarge,
                             color = TextSecondary,
                             fontWeight = FontWeight.Bold
@@ -185,11 +197,14 @@ fun DashboardScreen(
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(300.dp),
+                            .wrapContentHeight(),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         contentPadding = PaddingValues(bottom = 24.dp)
                     ) {
-                        items(history, key = { it.timestamp }) { event ->
+                        items(
+                            items = history.take(1),
+                            key = { it.timestamp })
+                        { event ->
                             SoundHistoryItem(event)
                         }
                     }
@@ -260,11 +275,11 @@ fun DashboardTopBar(
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+//            Spacer(modifier = Modifier.width(12.dp))
 
-            IconButton(onClick = onSOSClick) {
+            /*IconButton(onClick = onSOSClick) {
                 Text("🚨", fontSize = 24.sp)
-            }
+            }*/
         }
     }
 }
@@ -275,9 +290,27 @@ fun SoundVisualizer(
     rms: Float,
     onClick: () -> Unit,
 ) {
+    val soundIdentified by remember {
+        derivedStateOf {
+            state is DashboardUiState.Identified
+        }
+    }
+    val primaryColor = if (state is DashboardUiState.Identified) {
+        Color(state.event.type.color)
+    } else MaterialTheme.colorScheme.primary
+
     val pulseScale by animateFloatAsState(
-        targetValue = 1f + (rms * 4f).coerceAtMost(0.6f),
-        animationSpec = tween(150, easing = LinearEasing),
+        targetValue = if (soundIdentified) {
+            5f
+        } else if (state is DashboardUiState.ServiceOffline || state is DashboardUiState.MicAccessRequired) {
+            0.001f
+        } else {
+            1f + (rms * 10f).coerceAtMost(1f)
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
         label = "Pulse"
     )
 
@@ -286,18 +319,22 @@ fun SoundVisualizer(
             modifier = Modifier
                 .size(280.dp)
                 .drawBehind {
-                    val radius = (size.minDimension / 2.2f) * pulseScale
+                    val radius = (size.minDimension / 2.25f) * pulseScale
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                PrimaryBlue.copy(alpha = 0.4f),
-                                PrimaryBlue.copy(alpha = 0.1f),
-                                Color.Transparent
+                                primaryColor.copy(alpha = 0.7f * pulseScale),
+                                primaryColor.copy(alpha = 0.6f * pulseScale),
+                                primaryColor.copy(alpha = 0.5f * pulseScale),
+                                primaryColor.copy(alpha = 0.4f * pulseScale),
+                                primaryColor.copy(alpha = 0.3f * pulseScale),
+                                primaryColor.copy(alpha = 0.2f * pulseScale),
+                                Color.Transparent,
                             ),
                             center = center,
-                            radius = radius * 1.25f
+                            radius = radius * 1.15f
                         ),
-                        radius = radius * 1.25f,
+                        radius = radius * 1.15f,
                         center = center
                     )
                 }
@@ -331,37 +368,51 @@ fun SoundVisualizer(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        when (state) {
-            DashboardUiState.MicAccessRequired -> {
-                Text("Microphone Required", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Tap to Grant Permission", color = TextSecondary, fontSize = 14.sp)
-            }
-            DashboardUiState.ServiceOffline -> {
-                Text("Detection Offline", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Tap to Start Listening", color = TextSecondary, fontSize = 14.sp)
-            }
-            DashboardUiState.Identifying -> {
-                StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("Listening...", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-            }
-            is DashboardUiState.Identified -> {
-                val event = state.event
-                StatusBadge(
-                    color = Color(event.type.color),
-                    text = "${(event.confidence * 100).toInt()}% Match"
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    event.type.displayName,
-                    style = MaterialTheme.typography.displaySmall,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
-                )
+        AnimatedContent(
+            targetState = state,
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+            transitionSpec = { fadeIn() + expandVertically() togetherWith fadeOut() + shrinkVertically() },
+        ) { currentState ->
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                when (currentState) {
+                    DashboardUiState.MicAccessRequired -> {
+                        Text("Microphone Required", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Tap to Grant Permission", color = TextSecondary, fontSize = 14.sp)
+                    }
+
+                    DashboardUiState.ServiceOffline -> {
+                        Text("Detection Offline", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Tap to Start Listening", color = TextSecondary, fontSize = 14.sp)
+                    }
+
+                    DashboardUiState.Identifying -> {
+//                StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Listening...", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+                    }
+
+                    is DashboardUiState.Identified -> {
+                        val event = currentState.event
+                        Spacer(modifier = Modifier.height(16.dp))
+                        StatusBadge(
+                            color = Color(event.type.color),
+                            text = "${(event.confidence * 100).toInt()}% Confident"
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            event.type.displayName,
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text("Tap on the bubble to see what he's saying...", color = TextSecondary, fontSize = 14.sp)
+                    }
+                }
             }
         }
     }
@@ -390,9 +441,11 @@ fun StatusBadge(color: Color, text: String) {
 }
 
 @Composable
-fun SoundHistoryItem(event: SoundEvent) {
+fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateItem(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
