@@ -17,3 +17,4 @@ local.properties
 .vscode
 .idea
 .kotlin
+/bin

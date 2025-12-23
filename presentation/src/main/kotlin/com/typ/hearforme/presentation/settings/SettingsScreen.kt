@@ -1,5 +1,6 @@
 package com.typ.hearforme.presentation.settings
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -199,7 +200,7 @@ fun SoundSettingItem(
                 )
             }
 
-            if (setting.isEnabled) {
+            AnimatedVisibility(setting.isEnabled) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("Sensitivity", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
