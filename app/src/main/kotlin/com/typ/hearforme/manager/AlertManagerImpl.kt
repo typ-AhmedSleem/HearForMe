@@ -8,6 +8,7 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.model.SoundEvent
+import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -53,6 +54,30 @@ class AlertManagerImpl(
 
     override fun dismissAlert() {
         _activeAlert.value = null
+    }
+
+    override fun triggerSOS() {
+        val sosEvent = SoundEvent(
+            type = SoundType.ALARM_SIREN,
+            confidence = 1.0f,
+            timestamp = System.currentTimeMillis()
+        )
+        _activeAlert.value = sosEvent
+
+        // Intense strobe
+        scope.launch {
+            val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
+            repeat(10) {
+                cameraManager.setTorchMode(cameraId, true)
+                kotlinx.coroutines.delay(50)
+                cameraManager.setTorchMode(cameraId, false)
+                kotlinx.coroutines.delay(50)
+            }
+        }
+
+        // Continuous vibration
+        vibrate()
     }
 
     private fun triggerFeedback() {
