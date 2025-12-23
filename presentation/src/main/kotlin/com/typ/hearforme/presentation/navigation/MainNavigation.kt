@@ -77,9 +77,6 @@ fun MainNavigation(
             composable(Screen.Dashboard.route) {
                 val rms by dashboardViewModel.rms.collectAsStateWithLifecycle()
                 DashboardScreen(
-                    currentEvent = activeAlert,
-                    history = history,
-                    rms = rms,
                     onNavigateToSettings = {
                         navController.navigate(Screen.Settings.route)
                     },
