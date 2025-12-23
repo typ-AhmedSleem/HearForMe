@@ -2,6 +2,7 @@ package com.typ.hearforme.manager
 
 import android.content.Context
 import android.hardware.camera2.CameraManager
+import android.util.Log
 import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.manager.HapticEngine
 import com.typ.hearforme.domain.model.SoundEvent
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 class AlertManagerImpl(
     private val context: Context,
@@ -39,16 +41,26 @@ class AlertManagerImpl(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onSoundDetected(event: SoundEvent) {
-        // Save to persistent history
+        val activeAlertLabel = _activeAlert.value?.type?.label ?: ""
+        if (event.type.label.equals(activeAlertLabel, true)) return
+
+        // * Set as active alert
+        _activeAlert.value = event
+        triggerFeedback(event.type.priority)
+
+        // * Save to persistent history
         scope.launch {
             historyRepository.saveEvent(event)
+            // * Clear alert after n seconds for Low and Normal priority
+            if (event.type.priority <= SoundType.Priority.NORMAL) {
+                scope.launch {
+                    delay(3.seconds)
+                    _activeAlert.value = null
+                }
+            }
         }
 
-        // Check if we should show overlay (High/Critical)
-        if (event.type.priority >= SoundType.Priority.HIGH) {
-            _activeAlert.value = event
-            triggerFeedback(event.type.priority)
-        }
+        Log.d("HearForMe", "AlertManager::onSoundDetected '$event'.")
     }
 
     override suspend fun clearHistory() {
