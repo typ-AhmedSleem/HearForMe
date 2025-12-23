@@ -54,7 +54,7 @@ fun HistoryScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Clear logic */ }) {
+                    IconButton(onClick = { viewModel.clearHistory() }) {
                         Icon(Icons.Default.Delete, contentDescription = "Clear All")
                     }
                 }
