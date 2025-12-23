@@ -49,10 +49,11 @@ fun DashboardScreen(
     currentEvent: SoundEvent? = null,
     history: List<SoundEvent> = emptyList(),
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
 ) {
     Scaffold(
-        topBar = { DashboardTopBar() },
-        bottomBar = { DashboardBottomBar(onNavigateToSettings) },
+        topBar = { DashboardTopBar(onNavigateToSettings) },
+        bottomBar = { DashboardBottomBar(onSettingsClick = onNavigateToSettings, onHistoryClick = onNavigateToHistory) },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
@@ -85,7 +86,7 @@ fun DashboardScreen(
                     color = TextSecondary,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = {}) {
+                TextButton(onClick = onNavigateToHistory) {
                     Text("See History", fontWeight = FontWeight.Bold, color = PrimaryBlue)
                 }
             }
@@ -114,7 +115,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardTopBar() {
+fun DashboardTopBar(onSettingsClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,7 +165,7 @@ fun DashboardTopBar() {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Notifications, contentDescription = null, tint = OnBackground)
             }
         }
@@ -309,7 +310,7 @@ fun MockSoundHistoryItem(index: Int) {
 }
 
 @Composable
-fun DashboardBottomBar(onSettingsClick: () -> Unit = {}) {
+fun DashboardBottomBar(onSettingsClick: () -> Unit = {}, onHistoryClick: () -> Unit = {}) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -336,7 +337,7 @@ fun DashboardBottomBar(onSettingsClick: () -> Unit = {}) {
                 }
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onHistoryClick) {
                 Text("🕓", fontSize = 24.sp)
             }
 
