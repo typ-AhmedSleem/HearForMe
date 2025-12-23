@@ -44,6 +44,8 @@ class DashboardViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.ServiceOffline)
 
     val history: StateFlow<List<SoundEvent>> = alertManager.history
+    val activeAlert: StateFlow<SoundEvent?> = alertManager.activeAlert
+
     val rms: StateFlow<Float> = classifier.rms.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
