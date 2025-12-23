@@ -14,7 +14,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -47,10 +49,14 @@ class MediaPipeAudioClassifier(
     )
     override val rms = _rms.asSharedFlow()
 
+    private val _isRunning = MutableStateFlow(false)
+    override val isRunning = _isRunning.asStateFlow()
+
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun start() {
         if (classifier != null) return
+        _isRunning.value = true
         Log.d("HearForMe", "Starting classifier")
 
         val baseOptions = BaseOptions.builder()
@@ -161,6 +167,7 @@ class MediaPipeAudioClassifier(
     }
 
     override fun stop() {
+        _isRunning.value = false
         executor.shutdown()
         audioRecord?.stop()
         classifier?.close()
