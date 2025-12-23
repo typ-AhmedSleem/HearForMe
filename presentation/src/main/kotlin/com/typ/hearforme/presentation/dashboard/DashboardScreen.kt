@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -55,18 +56,18 @@ fun DashboardScreen(
         topBar = { DashboardTopBar(onNavigateToSettings) },
         bottomBar = { DashboardBottomBar(onSettingsClick = onNavigateToSettings, onHistoryClick = onNavigateToHistory) },
         containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
+    ) { innerPaddings ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(innerPaddings)
                 .padding(horizontal = 20.dp)
         ) {
             // Central Visualizer Area
             Box(
                 modifier = Modifier
-                    .weight(1.2f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 contentAlignment = Alignment.Center
             ) {
                 SoundVisualizer(currentEvent)
@@ -105,7 +106,7 @@ fun DashboardScreen(
 
                 // Mock items if empty
                 if (history.isEmpty()) {
-                    items(3) { index ->
+                    items(2) { index ->
                         MockSoundHistoryItem(index)
                     }
                 }
@@ -193,12 +194,12 @@ fun SoundVisualizer(event: SoundEvent?) {
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Status Badge
         Surface(
-            shape = RoundedCornerShape(20.dp),
             color = OnBackground,
+            shape = RoundedCornerShape(20.dp),
             modifier = Modifier.height(32.dp)
         ) {
             Row(
@@ -223,11 +224,12 @@ fun SoundVisualizer(event: SoundEvent?) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
+            modifier = Modifier.fillMaxWidth(),
             text = event?.type?.displayName ?: "Unidentified\nSound",
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            lineHeight = 40.sp
+            maxLines = 2
         )
     }
 }
