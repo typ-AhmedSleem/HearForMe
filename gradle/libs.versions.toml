@@ -66,4 +66,4 @@ sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
 kmpUtils = ["kmputils-common", "kmputils-compose"]
 androidxLifecycle = ["androidx-lifecycle-runtimeCompose", "androidx-lifecycle-viewmodelCompose"]
 koin = ["koin-core", "koin-compose", "koin-compose-viewmodel", "koin-compose-viewmodel-navigation"]
-sqldelight = ["sqldelight-runtime", "sqldelight-coroutines"]
+sqldelight = ["sqldelight-runtime", "sqldelight-coroutines", "sqldelight-android"]
