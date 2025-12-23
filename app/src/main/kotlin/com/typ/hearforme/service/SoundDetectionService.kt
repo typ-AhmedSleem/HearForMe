@@ -48,10 +48,10 @@ class SoundDetectionService : Service() {
 
         serviceScope.launch {
             classifier.events.collect { event ->
+                if (policy.shouldAlert(event, lastAlertTime)) {
                     alertManager.onSoundDetected(event)
-//                if (policy.shouldAlert(event, lastAlertTime)) {
-//                    lastAlertTime = event.timestamp
-//                }
+                    lastAlertTime = event.timestamp
+                }
             }
         }
 

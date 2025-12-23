@@ -91,6 +91,7 @@ sealed class SoundType(
                 // Doorbell
                 lowerLabel.containsIgnoringCase("doorbell")
                         || lowerLabel.containsIgnoringCase("Doorbell")
+                        || lowerLabel.containsIgnoringCase("fork")
                         || lowerLabel.containsIgnoringCase("door bell") -> Doorbell
 
                 // Alarms and sirens
