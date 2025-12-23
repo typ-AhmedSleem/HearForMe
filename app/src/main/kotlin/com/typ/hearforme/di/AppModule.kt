@@ -12,6 +12,7 @@ import com.typ.hearforme.domain.policy.DefaultDetectionPolicy
 import com.typ.hearforme.domain.policy.DetectionPolicy
 import com.typ.hearforme.domain.repository.SettingsRepository
 import com.typ.hearforme.manager.AlertManagerImpl
+import com.typ.hearforme.presentation.communication.CommunicationViewModel
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -25,6 +26,7 @@ val appModule = module {
 
     // Presentation
     viewModel { DashboardViewModel(get()) }
+    viewModel { CommunicationViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
 
     // Data

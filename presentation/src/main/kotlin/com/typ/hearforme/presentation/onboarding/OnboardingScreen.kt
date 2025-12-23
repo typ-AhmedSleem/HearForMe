@@ -132,6 +132,10 @@ fun OnboardingScreen(
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         permissions.add(Manifest.permission.POST_NOTIFICATIONS)
                     }
+                    // Android 14+ requires FOREGROUND_SERVICE_MICROPHONE at runtime
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        permissions.add(Manifest.permission.FOREGROUND_SERVICE_MICROPHONE)
+                    }
                     permissionLauncher.launch(permissions.toTypedArray())
                 } else {
                     onNext()
