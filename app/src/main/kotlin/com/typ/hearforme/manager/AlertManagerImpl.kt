@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
 
 class AlertManagerImpl(
     private val context: Context,
@@ -41,6 +40,13 @@ class AlertManagerImpl(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onSoundDetected(event: SoundEvent) {
+        // Handle Silence: Reset UI state to identifying
+        if (event.type is SoundType.Silence) {
+            _activeAlert.value = null
+            Log.d("HearForMe", "Silence detected, resetting UI.")
+            return
+        }
+
         val activeAlertLabel = _activeAlert.value?.type?.label ?: ""
         if (event.type.label.equals(activeAlertLabel, true)) return
 
@@ -51,13 +57,6 @@ class AlertManagerImpl(
         // * Save to persistent history
         scope.launch {
             historyRepository.saveEvent(event)
-            // * Clear alert after n seconds for Low and Normal priority
-            if (event.type.priority <= SoundType.Priority.NORMAL) {
-                scope.launch {
-                    delay(3.seconds)
-                    _activeAlert.value = null
-                }
-            }
         }
 
         Log.d("HearForMe", "AlertManager::onSoundDetected '$event'.")

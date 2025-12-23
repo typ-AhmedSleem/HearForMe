@@ -58,6 +58,14 @@ sealed class SoundType(
         emoji = "⏲️"
     )
 
+    data object Silence : SoundType(
+        displayName = "Silence",
+        label = "Silence",
+        priority = Priority.LOW,
+        color = 0xFF9E9E9E,
+        emoji = "🤫"
+    )
+
     // Catch-all for any of the 521 YAMNet classes
     data class Generic(val yamnetClassName: String) : SoundType(
         emoji = "🔊",
@@ -79,6 +87,9 @@ sealed class SoundType(
                 lowerLabel.containsIgnoringCase(it.label.lowercase())
             }
             if (directType != null) return directType
+
+            // * Handle silence explicitly if not in direct types (though it is now)
+            if (lowerLabel.containsIgnoringCase("silence")) return Silence
 
             // * Check alternative labels
             return when {
@@ -128,7 +139,7 @@ sealed class SoundType(
             AlarmSiren,
             SomeoneSpeaking,
             DogBarking,
-            RunningWater
+            RunningWater,
         )
 
         private fun String.containsIgnoringCase(text: String): Boolean {
