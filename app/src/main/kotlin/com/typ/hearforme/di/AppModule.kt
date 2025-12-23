@@ -37,7 +37,7 @@ val appModule = module {
 
     // Presentation
     viewModel { MainViewModel(get()) }
-    viewModel { DashboardViewModel(get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get()) }
     viewModel { CommunicationViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
 

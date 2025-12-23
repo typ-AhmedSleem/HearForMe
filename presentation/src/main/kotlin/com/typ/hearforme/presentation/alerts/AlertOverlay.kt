@@ -1,12 +1,7 @@
 package com.typ.hearforme.presentation.alerts
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.EaseInOutSine
-import androidx.compose.animation.core.InfiniteRepeatableSpec
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
@@ -28,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -37,15 +31,29 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.typ.hearforme.domain.model.SoundEvent
+import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.dashboard.getEmojiForType
+import kotlinx.coroutines.delay
+import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun AlertOverlay(
     event: SoundEvent,
     onDismiss: () -> Unit,
+    viewModel: DashboardViewModel = koinViewModel(),
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "FlashTransition")
+    if (event.type.priority == SoundType.Priority.CRITICAL) {
+        androidx.compose.runtime.LaunchedEffect(event) {
+            while (true) {
+                viewModel.triggerAlertFeedback(event)
+                delay(3000)
+            }
+        }
+    }
+
+    rememberInfiniteTransition(label = "FlashTransition")
     val typeColor = Color(event.type.color)
 
     Box(
