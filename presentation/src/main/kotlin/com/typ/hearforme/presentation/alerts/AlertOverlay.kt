@@ -1,10 +1,13 @@
 package com.typ.hearforme.presentation.alerts
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.InfiniteRepeatableSpec
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -69,10 +72,15 @@ fun AlertOverlay(
             .background(flashColor),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp)
+        AnimatedVisibility(
+            visible = true, // It's always true while AlertOverlay is in the composition
+            enter = scaleIn(),
+            exit = scaleOut()
         ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
+            ) {
             // Urgent Badge
             Surface(
                 shape = RoundedCornerShape(20.dp),
@@ -160,5 +168,6 @@ fun AlertOverlay(
         ) {
             Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
         }
+    }
     }
 }
