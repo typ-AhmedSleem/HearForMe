@@ -68,9 +68,11 @@ fun MainNavigation(
             }
 
             composable(Screen.Dashboard.route) {
+                val rms by viewModel.rms.collectAsStateWithLifecycle()
                 DashboardScreen(
                     currentEvent = activeAlert,
                     history = history,
+                    rms = rms,
                     onNavigateToSettings = {
                         navController.navigate(Screen.Settings.route)
                     },
@@ -79,6 +81,9 @@ fun MainNavigation(
                     },
                     onNavigateToCommunication = {
                         navController.navigate(Screen.Communication.route)
+                    },
+                    onSOSClick = {
+                        viewModel.triggerSOS()
                     }
                 )
             }
