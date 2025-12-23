@@ -138,6 +138,8 @@ class MediaPipeAudioClassifier(
         )
     }
 
+    var lastLabel = ""
+
     private fun processResults(results: AudioClassifierResult) {
         val classificationResults = results.classificationResults()
         if (classificationResults.isEmpty()) return
@@ -150,17 +152,20 @@ class MediaPipeAudioClassifier(
 
         val topResultScore = topResult?.score() ?: 0f
         val topResultLabel = topResult?.categoryName() ?: textUnknownSound
-
-        if (topResultScore > threshold) {
-            val soundType = SoundType.fromLabel(topResultLabel)
-            if (soundType !is SoundType.Generic) {
-                val event = SoundEvent(
-                    type = soundType,
-                    confidence = topResultScore,
-                    timestamp = System.currentTimeMillis(),
-                )
-                scope.launch {
-                    _events.emit(event)
+        if (lastLabel != topResultLabel) {
+            lastLabel = topResultLabel
+            Log.d("HearForMe", "Top result: $lastLabel ($topResultScore)")
+            if (topResultScore > threshold) {
+                val soundType = SoundType.fromLabel(topResultLabel)
+                if (soundType !is SoundType.Generic) {
+                    val event = SoundEvent(
+                        type = soundType,
+                        confidence = topResultScore,
+                        timestamp = System.currentTimeMillis(),
+                    )
+                    scope.launch {
+                        _events.emit(event)
+                    }
                 }
             }
         }
