@@ -1,5 +1,9 @@
 package com.typ.hearforme.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,6 +51,18 @@ fun MainNavigation(
         NavHost(
             navController = navController,
             contentAlignment = Alignment.Center,
+            enterTransition = {
+                fadeIn(tween(700)) + slideIntoContainer(
+                    animationSpec = tween(700),
+                    towards = SlideDirection.Start,
+                )
+            },
+            exitTransition = {
+                fadeOut(tween(700)) + slideOutOfContainer(
+                    animationSpec = tween(700),
+                    towards = SlideDirection.Start,
+                )
+            },
             startDestination = if (hasCompletedOnboarding) Screen.Dashboard.route else Screen.Welcome.route
         ) {
             composable(Screen.Welcome.route) {
