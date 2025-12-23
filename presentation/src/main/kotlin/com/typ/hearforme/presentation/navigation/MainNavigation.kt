@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.typ.hearforme.presentation.alerts.AlertOverlay
+import com.typ.hearforme.presentation.communication.CommunicationScreen
 import com.typ.hearforme.presentation.dashboard.DashboardScreen
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.history.HistoryScreen
@@ -26,6 +27,7 @@ sealed class Screen(val route: String) {
     object Dashboard : Screen("dashboard")
     object Settings : Screen("settings")
     object History : Screen("history")
+    object Communication : Screen("communication")
 }
 
 @Composable
@@ -74,6 +76,9 @@ fun MainNavigation(
                     },
                     onNavigateToHistory = {
                         navController.navigate(Screen.History.route)
+                    },
+                    onNavigateToCommunication = {
+                        navController.navigate(Screen.Communication.route)
                     }
                 )
             }
@@ -86,6 +91,12 @@ fun MainNavigation(
 
             composable(Screen.History.route) {
                 HistoryScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.Communication.route) {
+                CommunicationScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
