@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
@@ -44,6 +46,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -448,7 +451,7 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
             .animateItem(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -481,38 +484,78 @@ fun DashboardBottomBar(
     onHistoryClick: () -> Unit,
     onCommunicationClick: () -> Unit,
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        shape = RoundedCornerShape(32.dp),
-        color = Color.White,
-        shadowElevation = 8.dp
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
+                .wrapContentWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp)
                 .height(72.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            shadowElevation = 8.dp
         ) {
-            Surface(
-                modifier = Modifier.size(50.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = OnBackground,
-                onClick = onCommunicationClick
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(
+                        horizontal = 16.dp
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(
+                    alignment = Alignment.CenterHorizontally,
+                    space = 32.dp,
+                ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("💬", fontSize = 20.sp)
+                IconButton(
+                    onClick = onCommunicationClick,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.size(50.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            "💬",
+                            fontSize = 24.sp,
+                            color = MaterialTheme.colorScheme.surface
+                        )
+                    }
                 }
-            }
 
-            IconButton(onClick = onHistoryClick) {
-                Text("🕓", fontSize = 24.sp)
-            }
+                IconButton(
+                    onClick = onHistoryClick,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.size(50.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text(
+                        "🕓",
+                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.surface
+                    )
+                }
 
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = null, tint = TextSecondary)
+                IconButton(
+                    shape = RoundedCornerShape(24.dp),
+                    onClick = onSettingsClick,
+                    modifier = Modifier.size(50.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        contentDescription = null,
+                        imageVector = Icons.Default.Settings,
+                        tint = MaterialTheme.colorScheme.surface
+                    )
+                }
             }
         }
     }
