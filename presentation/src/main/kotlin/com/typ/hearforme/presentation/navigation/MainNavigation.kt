@@ -3,6 +3,7 @@ package com.typ.hearforme.presentation.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -14,6 +15,7 @@ import com.typ.hearforme.presentation.dashboard.DashboardScreen
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.history.HistoryScreen
 import com.typ.hearforme.presentation.main.MainViewModel
+import com.typ.hearforme.presentation.onboarding.ONBOARDING_LAST_STEP_INDEX
 import com.typ.hearforme.presentation.onboarding.OnboardingScreen
 import com.typ.hearforme.presentation.settings.SettingsScreen
 import com.typ.hearforme.presentation.welcome.WelcomeScreen
@@ -44,6 +46,7 @@ fun MainNavigation(
     Box {
         NavHost(
             navController = navController,
+            contentAlignment = Alignment.Center,
             startDestination = if (hasCompletedOnboarding) Screen.Dashboard.route else Screen.Welcome.route
         ) {
             composable(Screen.Welcome.route) {
@@ -59,9 +62,10 @@ fun MainNavigation(
                 OnboardingScreen(
                     step = step,
                     onNext = {
-                        if (step < 4) {
+                        if (step < ONBOARDING_LAST_STEP_INDEX) {
                             navController.navigate(Screen.Onboarding.createRoute(step + 1))
                         } else {
+                            mainViewModel.setOnboardingCompleted()
                             navController.navigate(Screen.Dashboard.route) {
                                 popUpTo(Screen.Welcome.route) { inclusive = true }
                             }
