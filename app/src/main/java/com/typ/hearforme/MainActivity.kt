@@ -4,11 +4,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.ui.Modifier
-import com.typ.hearforme.ui.theme.HearForMeTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
+import com.typ.hearforme.designsystem.theme.HearForMeTheme
+import com.typ.hearforme.di.appModule
+import com.typ.hearforme.presentation.navigation.MainNavigation
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,13 +21,22 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             HearForMeTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    contentColor = MaterialTheme.colorScheme.primary,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ) { innerPadding ->
-                }
+                MainNavigation()
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun MainActivityPreview() {
+    val ctx = LocalContext.current
+    startKoin {
+        androidLogger()
+        androidContext(ctx)
+        modules(appModule)
+    }
+    HearForMeTheme {
+        MainNavigation()
     }
 }
