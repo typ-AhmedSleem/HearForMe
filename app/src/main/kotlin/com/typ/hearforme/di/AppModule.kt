@@ -11,11 +11,11 @@ import com.typ.hearforme.domain.classifier.AudioClassifier
 import com.typ.hearforme.domain.communication.SpeechToTextEngine
 import com.typ.hearforme.domain.communication.TextToSpeechEngine
 import com.typ.hearforme.domain.manager.AlertManager
-import com.typ.hearforme.domain.policy.DefaultDetectionPolicy
-import com.typ.hearforme.domain.policy.DetectionPolicy
+import com.typ.hearforme.domain.manager.HapticEngine
 import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
 import com.typ.hearforme.manager.AlertManagerImpl
+import com.typ.hearforme.manager.HapticEngineImpl
 import com.typ.hearforme.presentation.communication.CommunicationViewModel
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.main.MainViewModel
@@ -31,13 +31,13 @@ val appModule = module {
         HistoryDatabase(driver)
     }
 
-    // Domain
-    single<DetectionPolicy> { DefaultDetectionPolicy() }
-    single<AlertManager> { AlertManagerImpl(androidContext(), get(), get()) }
+    // Managers
+    single<HapticEngine> { HapticEngineImpl(androidContext()) }
+    single<AlertManager> { AlertManagerImpl(androidContext(), get(), get(), get()) }
 
     // Presentation
     viewModel { MainViewModel(get()) }
-    viewModel { DashboardViewModel(get(), get(), get()) }
+    viewModel { DashboardViewModel(get(), get(), get(), get()) }
     viewModel { CommunicationViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
 
