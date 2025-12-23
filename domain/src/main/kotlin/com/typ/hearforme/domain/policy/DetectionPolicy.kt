@@ -15,7 +15,7 @@ class DefaultDetectionPolicy : DetectionPolicy {
 
     override fun shouldAlert(event: SoundEvent, lastAlertTime: Long?): Boolean {
         // 1. Check confidence (This might be redundant if Repository filters it, but good to have)
-        if (event.confidence < 0.5f) return false
+        if (event.confidence < 0.3f) return false
         
         // 2. Check cooldown
         if (lastAlertTime != null) {
