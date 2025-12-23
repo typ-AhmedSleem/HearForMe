@@ -2,6 +2,7 @@ package com.typ.hearforme.domain.model
 
 sealed class SoundType(
     val displayName: String,
+    val label: String,
     val priority: Priority,
     val color: Long, // ARGB color code
     val emoji: String,
@@ -11,6 +12,7 @@ sealed class SoundType(
     // Explicit high-priority types for deaf safety
     data object BabyCrying : SoundType(
         displayName = "Baby Crying",
+        label = "baby_crying",
         priority = Priority.HIGH,
         color = 0xFFE91E63,
         emoji = "👶"
@@ -18,6 +20,7 @@ sealed class SoundType(
 
     data object Doorbell : SoundType(
         displayName = "Doorbell",
+        label = "door_bell",
         priority = Priority.NORMAL,
         color = 0xFFFF9800,
         emoji = "🔔"
@@ -25,6 +28,7 @@ sealed class SoundType(
 
     data object AlarmSiren : SoundType(
         displayName = "Alarm/Siren",
+        label = "siren",
         priority = Priority.CRITICAL,
         color = 0xFFF44336,
         emoji = "🚨"
@@ -32,6 +36,7 @@ sealed class SoundType(
 
     data object SmokeAlarm : SoundType(
         displayName = "Smoke Alarm",
+        label = "smoke",
         priority = Priority.CRITICAL,
         color = 0xFFF44336,
         emoji = "🔥"
@@ -39,6 +44,7 @@ sealed class SoundType(
 
     data object DogBarking : SoundType(
         displayName = "Dog Barking",
+        label = "dog",
         priority = Priority.NORMAL,
         color = 0xFF795548,
         emoji = "🐕"
@@ -46,6 +52,7 @@ sealed class SoundType(
 
     data object RunningWater : SoundType(
         displayName = "Running Water",
+        label = "water",
         priority = Priority.LOW,
         color = 0xFF2196F3,
         emoji = "🚿"
@@ -53,11 +60,15 @@ sealed class SoundType(
 
     // Catch-all for any of the 521 YAMNet classes
     data class Generic(val yamnetClassName: String) : SoundType(
-        displayName = yamnetClassName.replace("_", " ").split(" ")
-            .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } },
+        emoji = "🔊",
+        color = 0xFF9E9E9E,
+        label = yamnetClassName,
         priority = Priority.LOW,
-        color = 0xFF9E9E9E, // Gray
-        emoji = "🔊"
+        displayName = yamnetClassName
+            .replace("_", " ")
+            .split(" ")
+            .joinToString(" ")
+            { it.replaceFirstChar { c -> c.uppercase() } },
     )
 
     companion object {
@@ -65,27 +76,34 @@ sealed class SoundType(
             val lowerLabel = label.lowercase()
             return when {
                 // Baby sounds
-                (lowerLabel.contains("baby") || lowerLabel.contains("infant")) &&
-                        (lowerLabel.contains("cry") || lowerLabel.contains("wail")) -> BabyCrying
+                (lowerLabel.containsIgnoringCase("baby")
+                        || lowerLabel.containsIgnoringCase("infant"))
+                        && (lowerLabel.containsIgnoringCase("cry")
+                        || lowerLabel.containsIgnoringCase("wail")) -> BabyCrying
 
                 // Doorbell
-                lowerLabel.contains("doorbell") || lowerLabel.contains("door bell") -> Doorbell
+                lowerLabel.containsIgnoringCase("doorbell")
+                        || lowerLabel.containsIgnoringCase("door bell") -> Doorbell
 
                 // Alarms and sirens
-                lowerLabel.contains("siren") ||
-                        (lowerLabel.contains("alarm") && !lowerLabel.contains("smoke")) ||
-                        lowerLabel.contains("emergency") -> AlarmSiren
+                lowerLabel.containsIgnoringCase("siren")
+                        || (lowerLabel.containsIgnoringCase("alarm")
+                        && !lowerLabel.containsIgnoringCase("smoke"))
+                        || lowerLabel.containsIgnoringCase("emergency") -> AlarmSiren
 
                 // Smoke alarm
-                lowerLabel.contains("smoke") && lowerLabel.contains("alarm") -> SmokeAlarm
+                lowerLabel.containsIgnoringCase("smoke")
+                        && lowerLabel.containsIgnoringCase("alarm") -> SmokeAlarm
 
                 // Dog barking
-                lowerLabel.contains("dog") &&
-                        (lowerLabel.contains("bark") || lowerLabel.contains("yap") || lowerLabel.contains("howl")) -> DogBarking
+                lowerLabel.containsIgnoringCase("dog")
+                        && (lowerLabel.containsIgnoringCase("bark")
+                        || lowerLabel.containsIgnoringCase("yap")
+                        || lowerLabel.containsIgnoringCase("howl")) -> DogBarking
 
                 // Water sounds
-                (lowerLabel.contains("water") || lowerLabel.contains("tap")) &&
-                        (lowerLabel.contains("run") || lowerLabel.contains("flow")) -> RunningWater
+                (lowerLabel.containsIgnoringCase("water") || lowerLabel.containsIgnoringCase("tap")) &&
+                        (lowerLabel.containsIgnoringCase("run") || lowerLabel.containsIgnoringCase("flow")) -> RunningWater
 
                 // Everything else
                 else -> Generic(label)
@@ -101,5 +119,10 @@ sealed class SoundType(
             DogBarking,
             RunningWater
         )
+
+        private fun String.containsIgnoringCase(text: String): Boolean {
+            return this.contains(text, ignoreCase = true)
+        }
     }
+
 }
