@@ -12,7 +12,7 @@ sealed class SoundType(
     // Explicit high-priority types for deaf safety
     data object BabyCrying : SoundType(
         displayName = "Baby Crying",
-        label = "baby_crying",
+        label = "cry",
         priority = Priority.HIGH,
         color = 0xFFE91E63,
         emoji = "👶"
@@ -20,8 +20,8 @@ sealed class SoundType(
 
     data object Doorbell : SoundType(
         displayName = "Doorbell",
-        label = "door_bell",
-        priority = Priority.NORMAL,
+        label = "bell",
+        priority = Priority.HIGH,
         color = 0xFFFF9800,
         emoji = "🔔"
     )
@@ -34,28 +34,28 @@ sealed class SoundType(
         emoji = "🚨"
     )
 
-    data object SmokeAlarm : SoundType(
-        displayName = "Smoke Alarm",
-        label = "smoke",
-        priority = Priority.CRITICAL,
+    data object SomeoneSpeaking : SoundType(
+        displayName = "Someone Speaking",
+        label = "speech",
+        priority = Priority.LOW,
         color = 0xFFF44336,
-        emoji = "🔥"
+        emoji = "🗣️"
     )
 
     data object DogBarking : SoundType(
         displayName = "Dog Barking",
         label = "dog",
-        priority = Priority.NORMAL,
+        priority = Priority.HIGH,
         color = 0xFF795548,
         emoji = "🐕"
     )
 
     data object RunningWater : SoundType(
-        displayName = "Running Water",
-        label = "water",
-        priority = Priority.LOW,
+        displayName = "Microwave Done",
+        label = "Beep",
+        priority = Priority.NORMAL,
         color = 0xFF2196F3,
-        emoji = "🚿"
+        emoji = "⏲️"
     )
 
     // Catch-all for any of the 521 YAMNet classes
@@ -74,6 +74,13 @@ sealed class SoundType(
     companion object {
         fun fromLabel(label: String): SoundType {
             val lowerLabel = label.lowercase()
+            // * Check direct labels first
+            val directType = explicitTypes.firstOrNull {
+                lowerLabel.containsIgnoringCase(it.label.lowercase())
+            }
+            if (directType != null) return directType
+
+            // * Check alternative labels
             return when {
                 // Baby sounds
                 (lowerLabel.containsIgnoringCase("baby")
@@ -83,27 +90,30 @@ sealed class SoundType(
 
                 // Doorbell
                 lowerLabel.containsIgnoringCase("doorbell")
+                        || lowerLabel.containsIgnoringCase("Doorbell")
                         || lowerLabel.containsIgnoringCase("door bell") -> Doorbell
 
                 // Alarms and sirens
                 lowerLabel.containsIgnoringCase("siren")
                         || (lowerLabel.containsIgnoringCase("alarm")
-                        && !lowerLabel.containsIgnoringCase("smoke"))
+                        && !lowerLabel.containsIgnoringCase("police"))
                         || lowerLabel.containsIgnoringCase("emergency") -> AlarmSiren
 
                 // Smoke alarm
-                lowerLabel.containsIgnoringCase("smoke")
-                        && lowerLabel.containsIgnoringCase("alarm") -> SmokeAlarm
+                lowerLabel.containsIgnoringCase("fire")
+                        && lowerLabel.containsIgnoringCase("alarm") -> SomeoneSpeaking
 
                 // Dog barking
                 lowerLabel.containsIgnoringCase("dog")
                         && (lowerLabel.containsIgnoringCase("bark")
-                        || lowerLabel.containsIgnoringCase("yap")
-                        || lowerLabel.containsIgnoringCase("howl")) -> DogBarking
+                        || lowerLabel.containsIgnoringCase("animal")
+                        || lowerLabel.containsIgnoringCase("dog barking")) -> DogBarking
 
                 // Water sounds
-                (lowerLabel.containsIgnoringCase("water") || lowerLabel.containsIgnoringCase("tap")) &&
-                        (lowerLabel.containsIgnoringCase("run") || lowerLabel.containsIgnoringCase("flow")) -> RunningWater
+                lowerLabel.containsIgnoringCase("beep")
+                        || lowerLabel.containsIgnoringCase("boop")
+                        || lowerLabel.containsIgnoringCase("microwave")
+                        || lowerLabel.containsIgnoringCase("bleep") -> RunningWater
 
                 // Everything else
                 else -> Generic(label)
@@ -115,7 +125,7 @@ sealed class SoundType(
             BabyCrying,
             Doorbell,
             AlarmSiren,
-            SmokeAlarm,
+            SomeoneSpeaking,
             DogBarking,
             RunningWater
         )
