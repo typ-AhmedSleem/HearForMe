@@ -2,18 +2,20 @@ package com.typ.hearforme.presentation.dashboard
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,8 +36,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -49,9 +49,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -64,7 +65,6 @@ import com.typ.hearforme.designsystem.theme.OnBackground
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.TextSecondary
 import com.typ.hearforme.domain.model.SoundEvent
-import com.typ.hearforme.domain.model.SoundType
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -80,27 +80,51 @@ fun DashboardScreen(
     val rms by viewModel.rms.collectAsState()
     val context = LocalContext.current
 
-    // Permission check
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.onPermissionResult(granted)
+    }
+
     LaunchedEffect(Unit) {
         val granted = ContextCompat.checkSelfPermission(
             context, Manifest.permission.RECORD_AUDIO
         ) == PackageManager.PERMISSION_GRANTED
         viewModel.onPermissionResult(granted)
+
+        viewModel.requestPermissionTrigger.collect {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
     }
 
     Scaffold(
         topBar = {
             DashboardTopBar(
                 isLive = uiState !is DashboardUiState.ServiceOffline && uiState !is DashboardUiState.MicAccessRequired,
-                onSettingsClick = onNavigateToSettings,
-                onSOSClick = onSOSClick
+                onSettingsClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToSettings()
+                },
+                onSOSClick = {
+                    viewModel.performHapticFeedback()
+                    onSOSClick()
+                }
             )
         },
         bottomBar = {
             DashboardBottomBar(
-                onSettingsClick = onNavigateToSettings,
-                onHistoryClick = onNavigateToHistory,
-                onCommunicationClick = onNavigateToCommunication
+                onSettingsClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToSettings()
+                },
+                onHistoryClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToHistory()
+                },
+                onCommunicationClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToCommunication()
+                }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -111,7 +135,6 @@ fun DashboardScreen(
                 .padding(innerPaddings)
                 .padding(horizontal = 20.dp)
         ) {
-            // Central Visualizer Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -119,12 +142,19 @@ fun DashboardScreen(
                     .wrapContentHeight(),
                 contentAlignment = Alignment.Center
             ) {
-                SoundVisualizer(uiState, rms, onGrantPermission = {
-                    // Logic for permission request can be here
-                })
+                SoundVisualizer(
+                    state = uiState,
+                    rms = rms,
+                    onClick = {
+                        when (uiState) {
+                            is DashboardUiState.MicAccessRequired -> viewModel.triggerPermissionRequest()
+                            is DashboardUiState.ServiceOffline -> viewModel.enableDetection()
+                            else -> viewModel.performHapticFeedback()
+                        }
+                    }
+                )
             }
 
-            // History Section (Hidden if empty)
             AnimatedVisibility(
                 visible = history.isNotEmpty(),
                 enter = fadeIn(),
@@ -144,7 +174,10 @@ fun DashboardScreen(
                             color = TextSecondary,
                             fontWeight = FontWeight.Bold
                         )
-                        TextButton(onClick = onNavigateToHistory) {
+                        TextButton(onClick = {
+                            viewModel.performHapticFeedback()
+                            onNavigateToHistory()
+                        }) {
                             Text("See History", fontWeight = FontWeight.Bold, color = PrimaryBlue)
                         }
                     }
@@ -198,7 +231,6 @@ fun DashboardTopBar(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Live/Offline Indicator
             val indicatorColor by animateColorAsState(
                 if (isLive) Color(0xFF4CAF50) else Color.LightGray,
                 label = "StatusColor"
@@ -241,33 +273,41 @@ fun DashboardTopBar(
 fun SoundVisualizer(
     state: DashboardUiState,
     rms: Float,
-    onGrantPermission: () -> Unit,
+    onClick: () -> Unit,
 ) {
     val pulseScale by animateFloatAsState(
         targetValue = 1f + (rms * 4f).coerceAtMost(0.6f),
-        animationSpec = tween(100, easing = LinearEasing),
+        animationSpec = tween(150, easing = LinearEasing),
         label = "Pulse"
     )
 
-    rememberInfiniteTransition(label = "GradientPulse")
-
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center) {
-            // Pulsing Background with Gradient
-            Canvas(modifier = Modifier.size(240.dp * pulseScale)) {
-                val brush = Brush.radialGradient(
-                    colors = listOf(
-                        PrimaryBlue.copy(alpha = 0.3f),
-                        PrimaryBlue.copy(alpha = 0.05f),
-                        Color.Transparent
-                    ),
-                    center = center,
-                    radius = size.width / 2
-                )
-                drawCircle(brush = brush)
-            }
-
-            // Elegant Outer Ring
+        Box(
+            modifier = Modifier
+                .size(280.dp)
+                .drawBehind {
+                    val radius = (size.minDimension / 2.2f) * pulseScale
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                PrimaryBlue.copy(alpha = 0.4f),
+                                PrimaryBlue.copy(alpha = 0.1f),
+                                Color.Transparent
+                            ),
+                            center = center,
+                            radius = radius * 1.25f
+                        ),
+                        radius = radius * 1.25f,
+                        center = center
+                    )
+                }
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Surface(
                 modifier = Modifier.size(220.dp),
                 shape = CircleShape,
@@ -281,30 +321,10 @@ fun SoundVisualizer(
                         label = "VisualizerContent"
                     ) { targetState ->
                         when (targetState) {
-                            DashboardUiState.MicAccessRequired -> {
-                                Text("🎤", fontSize = 80.sp, color = Color.LightGray)
-                            }
-
-                            DashboardUiState.ServiceOffline -> {
-                                Text("💤", fontSize = 80.sp, color = Color.LightGray)
-                            }
-
-                            DashboardUiState.Identifying -> {
-                                Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
-                            }
-
-                            is DashboardUiState.Identified -> {
-                                Text(getEmojiForType(targetState.event.type), fontSize = 80.sp)
-                            }
-                        }
-                    }
-
-                    // Rotating gradient border for identifying/identified states
-                    if (state is DashboardUiState.Identifying || state is DashboardUiState.Identified) {
-                        Canvas(modifier = Modifier
-                            .size(220.dp)
-                            .clip(CircleShape)) {
-                            // Subtle rotating effect or static accent
+                            DashboardUiState.MicAccessRequired -> Text("🎤", fontSize = 80.sp, color = Color.LightGray)
+                            DashboardUiState.ServiceOffline -> Text("💤", fontSize = 80.sp, color = Color.LightGray)
+                            DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
+                            is DashboardUiState.Identified -> Text(targetState.event.type.emoji, fontSize = 80.sp)
                         }
                     }
                 }
@@ -313,31 +333,22 @@ fun SoundVisualizer(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Status Badge and Action
         when (state) {
             DashboardUiState.MicAccessRequired -> {
                 Text("Microphone Required", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = onGrantPermission,
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Grant Access")
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Tap to Grant Permission", color = TextSecondary, fontSize = 14.sp)
             }
-
             DashboardUiState.ServiceOffline -> {
                 Text("Detection Offline", fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                Text("Turn on sound detection in settings", color = TextSecondary, fontSize = 14.sp)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Tap to Start Listening", color = TextSecondary, fontSize = 14.sp)
             }
-
             DashboardUiState.Identifying -> {
                 StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Identifying...", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+                Text("Listening...", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
             }
-
             is DashboardUiState.Identified -> {
                 val event = state.event
                 StatusBadge(
@@ -373,12 +384,7 @@ fun StatusBadge(color: Color, text: String) {
                     .background(color, CircleShape)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text,
-                color = Color.White,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Text(text, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -401,7 +407,7 @@ fun SoundHistoryItem(event: SoundEvent) {
                     .background(Color(event.type.color).copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(getEmojiForType(event.type), fontSize = 24.sp)
+                Text(event.type.emoji, fontSize = 24.sp)
             }
 
             Spacer(modifier = Modifier.width(16.dp))
@@ -458,5 +464,3 @@ fun DashboardBottomBar(
         }
     }
 }
-
-fun getEmojiForType(type: SoundType): String = type.emoji
