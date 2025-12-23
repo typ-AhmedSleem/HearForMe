@@ -11,7 +11,9 @@ import androidx.navigation.compose.rememberNavController
 import com.typ.hearforme.presentation.alerts.AlertOverlay
 import com.typ.hearforme.presentation.dashboard.DashboardScreen
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
+import com.typ.hearforme.presentation.history.HistoryScreen
 import com.typ.hearforme.presentation.onboarding.OnboardingScreen
+import com.typ.hearforme.presentation.settings.SettingsScreen
 import com.typ.hearforme.presentation.welcome.WelcomeScreen
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -22,6 +24,8 @@ sealed class Screen(val route: String) {
     }
 
     object Dashboard : Screen("dashboard")
+    object Settings : Screen("settings")
+    object History : Screen("history")
 }
 
 @Composable
@@ -64,7 +68,25 @@ fun MainNavigation(
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     currentEvent = activeAlert,
-                    history = history
+                    history = history,
+                    onNavigateToSettings = {
+                        navController.navigate(Screen.Settings.route)
+                    },
+                    onNavigateToHistory = {
+                        navController.navigate(Screen.History.route)
+                    }
+                )
+            }
+
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.History.route) {
+                HistoryScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }

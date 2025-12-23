@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -48,23 +49,25 @@ import com.typ.hearforme.domain.model.SoundType
 fun DashboardScreen(
     currentEvent: SoundEvent? = null,
     history: List<SoundEvent> = emptyList(),
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToHistory: () -> Unit = {},
 ) {
     Scaffold(
-        topBar = { DashboardTopBar() },
-        bottomBar = { DashboardBottomBar() },
+        topBar = { DashboardTopBar(onNavigateToSettings) },
+        bottomBar = { DashboardBottomBar(onSettingsClick = onNavigateToSettings, onHistoryClick = onNavigateToHistory) },
         containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
+    ) { innerPaddings ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
+                .padding(innerPaddings)
                 .padding(horizontal = 20.dp)
         ) {
             // Central Visualizer Area
             Box(
                 modifier = Modifier
-                    .weight(1.2f)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .wrapContentHeight(),
                 contentAlignment = Alignment.Center
             ) {
                 SoundVisualizer(currentEvent)
@@ -84,7 +87,7 @@ fun DashboardScreen(
                     color = TextSecondary,
                     fontWeight = FontWeight.Bold
                 )
-                TextButton(onClick = {}) {
+                TextButton(onClick = onNavigateToHistory) {
                     Text("See History", fontWeight = FontWeight.Bold, color = PrimaryBlue)
                 }
             }
@@ -103,7 +106,7 @@ fun DashboardScreen(
 
                 // Mock items if empty
                 if (history.isEmpty()) {
-                    items(3) { index ->
+                    items(2) { index ->
                         MockSoundHistoryItem(index)
                     }
                 }
@@ -113,7 +116,7 @@ fun DashboardScreen(
 }
 
 @Composable
-fun DashboardTopBar() {
+fun DashboardTopBar(onSettingsClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -163,7 +166,7 @@ fun DashboardTopBar() {
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Notifications, contentDescription = null, tint = OnBackground)
             }
         }
@@ -191,12 +194,12 @@ fun SoundVisualizer(event: SoundEvent?) {
             }
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Status Badge
         Surface(
-            shape = RoundedCornerShape(20.dp),
             color = OnBackground,
+            shape = RoundedCornerShape(20.dp),
             modifier = Modifier.height(32.dp)
         ) {
             Row(
@@ -221,11 +224,12 @@ fun SoundVisualizer(event: SoundEvent?) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
+            modifier = Modifier.fillMaxWidth(),
             text = event?.type?.displayName ?: "Unidentified\nSound",
-            style = MaterialTheme.typography.displayMedium,
+            style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
-            lineHeight = 40.sp
+            maxLines = 2
         )
     }
 }
@@ -308,7 +312,7 @@ fun MockSoundHistoryItem(index: Int) {
 }
 
 @Composable
-fun DashboardBottomBar() {
+fun DashboardBottomBar(onSettingsClick: () -> Unit = {}, onHistoryClick: () -> Unit = {}) {
     Surface(
         modifier = Modifier
             .fillMaxWidth()
@@ -335,11 +339,11 @@ fun DashboardBottomBar() {
                 }
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onHistoryClick) {
                 Text("🕓", fontSize = 24.sp)
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = onSettingsClick) {
                 Icon(Icons.Default.Settings, contentDescription = null, tint = TextSecondary)
             }
         }
