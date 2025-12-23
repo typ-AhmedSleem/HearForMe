@@ -39,7 +39,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.typ.hearforme.designsystem.theme.AlertHigh
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.presentation.dashboard.getEmojiForType
 
@@ -50,15 +49,11 @@ fun AlertOverlay(
     onDismiss: () -> Unit,
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "FlashTransition")
-
-    val baseColor = when (event.confidence > 0.8f) {
-        true -> AlertHigh
-        false -> Color.Black
-    }
+    val typeColor = Color(event.type.color)
 
     val flashColor by infiniteTransition.animateColor(
-        initialValue = baseColor.copy(alpha = 0.8f),
-        targetValue = baseColor.copy(alpha = 1.0f),
+        initialValue = typeColor.copy(alpha = 0.8f),
+        targetValue = typeColor.copy(alpha = 1.0f),
         animationSpec = InfiniteRepeatableSpec(
             animation = tween(500),
             repeatMode = RepeatMode.Reverse
@@ -88,7 +83,7 @@ fun AlertOverlay(
                 modifier = Modifier.padding(bottom = 48.dp)
             ) {
                 Text(
-                    "URGENT ALERT",
+                    "${event.type.priority.name} ALERT",
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                     fontWeight = FontWeight.Bold,
