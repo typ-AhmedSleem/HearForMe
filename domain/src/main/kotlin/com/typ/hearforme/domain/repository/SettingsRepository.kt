@@ -17,4 +17,11 @@ interface SettingsRepository {
     // Alert settings
     val isFlashlightEnabled: Flow<Boolean>
     val isVibrationEnabled: Flow<Boolean>
+
+    // Update functions
+    suspend fun setDetectionEnabled(enabled: Boolean)
+    suspend fun setSoundTypeEnabled(type: SoundType, enabled: Boolean)
+    suspend fun setSensitivity(type: SoundType, sensitivity: Float)
+    suspend fun setFlashlightEnabled(enabled: Boolean)
+    suspend fun setVibrationEnabled(enabled: Boolean)
 }
