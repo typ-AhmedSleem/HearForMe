@@ -23,6 +23,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -44,11 +46,18 @@ fun AlertOverlay(
     viewModel: DashboardViewModel = koinViewModel(),
 ) {
     if (event.type.priority == SoundType.Priority.CRITICAL) {
-        androidx.compose.runtime.LaunchedEffect(event) {
+        LaunchedEffect(event) {
             while (true) {
                 viewModel.triggerAlertFeedback(event)
                 delay(3000)
             }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        // todo: Style the StatusBar based on color of the background
+        onDispose {
+            // todo: Reset StatusBar style
         }
     }
 
@@ -134,7 +143,7 @@ fun AlertOverlay(
                         Text("Dismiss", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Surface(
+                    /*Surface(
                         modifier = Modifier.size(64.dp),
                         shape = RoundedCornerShape(24.dp),
                         color = Color.White.copy(alpha = 0.2f),
@@ -143,7 +152,7 @@ fun AlertOverlay(
                         Box(contentAlignment = Alignment.Center) {
                             Text("🔕", fontSize = 24.sp)
                         }
-                    }
+                    }*/
                 }
             }
         }
