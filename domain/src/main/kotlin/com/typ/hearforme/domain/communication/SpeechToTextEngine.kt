@@ -8,7 +8,7 @@ interface SpeechToTextEngine {
     val isListening: Flow<Boolean>
     val error: Flow<String?>
 
-    fun startListening(language: String = "ar-SA")
+    fun startListening(language: String = "ar")
     fun stopListening()
     fun release()
 }
