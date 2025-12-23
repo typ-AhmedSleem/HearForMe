@@ -1,6 +1,7 @@
 package com.typ.hearforme.manager
 
 import android.content.Context
+import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -54,7 +55,26 @@ class AlertManagerImpl(
             if (settingsRepository.isVibrationEnabled.first()) {
                 vibrate()
             }
-            // Flashlight implementation would go here (needs CameraManager)
+            if (settingsRepository.isFlashlightEnabled.first()) {
+                strobe()
+            }
+        }
+    }
+
+    private fun strobe() {
+        val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        scope.launch {
+            try {
+                val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
+                repeat(5) {
+                    cameraManager.setTorchMode(cameraId, true)
+                    kotlinx.coroutines.delay(100)
+                    cameraManager.setTorchMode(cameraId, false)
+                    kotlinx.coroutines.delay(100)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
