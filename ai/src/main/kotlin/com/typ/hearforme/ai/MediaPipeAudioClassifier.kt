@@ -27,6 +27,8 @@ class MediaPipeAudioClassifier(
     private val threshold: Float = 0.3f,
 ) : DomainAudioClassifier {
 
+    private val textUnknownSound = context.getString(R.string.unknown_sound)
+
     private var classifier: AudioClassifier? = null
     private var audioRecord: AudioRecord? = null
     private val executor = ScheduledThreadPoolExecutor(1)
@@ -141,11 +143,11 @@ class MediaPipeAudioClassifier(
         }.firstOrNull()
 
         val topResultScore = topResult?.score() ?: 0f
-        val topResultLabel = topResult?.categoryName() ?: SoundType.UNKNOWN.displayName
+        val topResultLabel = topResult?.categoryName() ?: textUnknownSound
 
         if (topResultScore > threshold) {
             val soundType = SoundType.fromLabel(topResultLabel)
-            if (soundType != SoundType.UNKNOWN) {
+            if (soundType !is SoundType.Generic) {
                 val event = SoundEvent(
                     type = soundType,
                     confidence = topResultScore,
