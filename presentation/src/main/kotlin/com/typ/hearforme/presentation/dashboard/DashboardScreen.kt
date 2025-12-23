@@ -6,10 +6,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -36,7 +33,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -237,10 +233,6 @@ fun DashboardTopBar(
             IconButton(onClick = onSOSClick) {
                 Text("🚨", fontSize = 24.sp)
             }
-
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Notifications, contentDescription = null, tint = OnBackground)
-            }
         }
     }
 }
@@ -257,7 +249,7 @@ fun SoundVisualizer(
         label = "Pulse"
     )
 
-    val infiniteTransition = rememberInfiniteTransition(label = "GradientPulse")
+    rememberInfiniteTransition(label = "GradientPulse")
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center) {
