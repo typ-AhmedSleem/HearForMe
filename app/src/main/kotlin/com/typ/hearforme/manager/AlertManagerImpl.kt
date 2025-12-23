@@ -2,11 +2,8 @@ package com.typ.hearforme.manager
 
 import android.content.Context
 import android.hardware.camera2.CameraManager
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import com.typ.hearforme.domain.manager.AlertManager
+import com.typ.hearforme.domain.manager.HapticEngine
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.domain.repository.HistoryRepository
@@ -26,6 +23,7 @@ class AlertManagerImpl(
     private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val historyRepository: HistoryRepository,
+    private val hapticEngine: HapticEngine,
 ) : AlertManager {
 
     private val _activeAlert = MutableStateFlow<SoundEvent?>(null)
@@ -81,14 +79,14 @@ class AlertManagerImpl(
             }
         }
 
-        // Critical vibration
-        vibrate(SoundType.Priority.CRITICAL)
+        // Critical vibration via engine
+        hapticEngine.vibrateForPriority(SoundType.Priority.CRITICAL)
     }
 
     private fun triggerFeedback(priority: SoundType.Priority) {
         scope.launch {
             if (settingsRepository.isVibrationEnabled.first()) {
-                vibrate(priority)
+                hapticEngine.vibrateForPriority(priority)
             }
             if (settingsRepository.isFlashlightEnabled.first()) {
                 strobe()
@@ -111,25 +109,5 @@ class AlertManagerImpl(
                 e.printStackTrace()
             }
         }
-    }
-
-    private fun vibrate(priority: SoundType.Priority) {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-
-        // Priority-based waveform patterns
-        val pattern = when (priority) {
-            SoundType.Priority.CRITICAL -> longArrayOf(0, 200, 100, 200, 100, 500, 100, 200) // Intense repeated
-            SoundType.Priority.HIGH -> longArrayOf(0, 300, 100, 300, 100, 300) // Triple pulse
-            SoundType.Priority.NORMAL -> longArrayOf(0, 400, 200, 400) // Double pulse
-            SoundType.Priority.LOW -> longArrayOf(0, 300) // Single pulse
-        }
-
-        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 }
