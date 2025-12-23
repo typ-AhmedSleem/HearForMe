@@ -35,6 +35,7 @@ class MediaPipeAudioClassifier(
     private var audioRecord: AudioRecord? = null
     private val executor = ScheduledThreadPoolExecutor(1)
 
+    var lastLabel = ""
     private val _events = MutableSharedFlow<SoundEvent>(
         replay = 0,
         extraBufferCapacity = 10,
@@ -125,9 +126,7 @@ class MediaPipeAudioClassifier(
                     sum += (sample.toDouble() * sample.toDouble())
                 }
                 val rmsValue = sqrt(sum / limit.toDouble()).toFloat()
-                scope.launch {
-                    _rms.emit(rmsValue)
-                }
+                scope.launch { _rms.emit(rmsValue) }
 
                 val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
                 processResults(results)
@@ -137,8 +136,6 @@ class MediaPipeAudioClassifier(
             TimeUnit.MILLISECONDS
         )
     }
-
-    var lastLabel = ""
 
     private fun processResults(results: AudioClassifierResult) {
         val classificationResults = results.classificationResults()
