@@ -22,6 +22,7 @@ sealed class Screen(val route: String) {
     }
 
     object Dashboard : Screen("dashboard")
+    object Settings : Screen("settings")
 }
 
 @Composable
@@ -64,7 +65,16 @@ fun MainNavigation(
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     currentEvent = activeAlert,
-                    history = history
+                    history = history,
+                    onNavigateToSettings = {
+                        navController.navigate(Screen.Settings.route)
+                    }
+                )
+            }
+
+            composable(Screen.Settings.route) {
+                com.typ.hearforme.presentation.settings.SettingsScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
         }
