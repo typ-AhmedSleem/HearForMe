@@ -40,7 +40,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
-import com.typ.hearforme.presentation.dashboard.getEmojiForType
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -188,7 +187,7 @@ fun SoundSettingItem(
                             .background(PrimaryBlue.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(getEmojiForType(setting.type), fontSize = 20.sp)
+                        Text(setting.type.emoji, fontSize = 20.sp)
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(setting.type.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

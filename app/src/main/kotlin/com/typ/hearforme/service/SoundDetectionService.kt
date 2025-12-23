@@ -48,7 +48,6 @@ class SoundDetectionService : Service() {
 
         serviceScope.launch {
             classifier.events.collect { event ->
-                Log.d("HearForMe", "Detected: ${event.type.displayName} (${event.confidence})")
                 if (policy.shouldAlert(event, lastAlertTime)) {
                     alertManager.onSoundDetected(event)
                     lastAlertTime = event.timestamp

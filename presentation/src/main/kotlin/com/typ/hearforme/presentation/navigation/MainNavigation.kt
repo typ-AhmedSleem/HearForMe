@@ -1,5 +1,9 @@
 package com.typ.hearforme.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -9,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.presentation.alerts.AlertOverlay
 import com.typ.hearforme.presentation.communication.CommunicationScreen
 import com.typ.hearforme.presentation.dashboard.DashboardScreen
@@ -40,13 +45,24 @@ fun MainNavigation(
     mainViewModel: MainViewModel = koinViewModel(),
 ) {
     val activeAlert by dashboardViewModel.activeAlert.collectAsStateWithLifecycle()
-    val history by dashboardViewModel.history.collectAsStateWithLifecycle()
     val hasCompletedOnboarding by mainViewModel.hasCompletedOnboarding.collectAsStateWithLifecycle()
 
     Box {
         NavHost(
             navController = navController,
             contentAlignment = Alignment.Center,
+            enterTransition = {
+                fadeIn(tween(700)) + slideIntoContainer(
+                    animationSpec = tween(700),
+                    towards = SlideDirection.Start,
+                )
+            },
+            exitTransition = {
+                fadeOut(tween(700)) + slideOutOfContainer(
+                    animationSpec = tween(700),
+                    towards = SlideDirection.Start,
+                )
+            },
             startDestination = if (hasCompletedOnboarding) Screen.Dashboard.route else Screen.Welcome.route
         ) {
             composable(Screen.Welcome.route) {
@@ -75,11 +91,7 @@ fun MainNavigation(
             }
 
             composable(Screen.Dashboard.route) {
-                val rms by dashboardViewModel.rms.collectAsStateWithLifecycle()
                 DashboardScreen(
-                    currentEvent = activeAlert,
-                    history = history,
-                    rms = rms,
                     onNavigateToSettings = {
                         navController.navigate(Screen.Settings.route)
                     },
@@ -116,10 +128,13 @@ fun MainNavigation(
 
         // Overlay is show on top of any screen
         activeAlert?.let { alert ->
-            AlertOverlay(
-                event = alert,
-                onDismiss = { dashboardViewModel.dismissAlert() }
-            )
+            if (alert.type.priority >= SoundType.Priority.HIGH) {
+                // * Should show overlay
+                AlertOverlay(
+                    event = alert,
+                    onDismiss = { dashboardViewModel.dismissAlert() }
+                )
+            }
         }
     }
 }

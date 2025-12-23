@@ -14,7 +14,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.concurrent.ScheduledThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -33,6 +35,7 @@ class MediaPipeAudioClassifier(
     private var audioRecord: AudioRecord? = null
     private val executor = ScheduledThreadPoolExecutor(1)
 
+    var lastLabel = ""
     private val _events = MutableSharedFlow<SoundEvent>(
         replay = 0,
         extraBufferCapacity = 10,
@@ -47,10 +50,14 @@ class MediaPipeAudioClassifier(
     )
     override val rms = _rms.asSharedFlow()
 
+    private val _isRunning = MutableStateFlow(false)
+    override val isRunning = _isRunning.asStateFlow()
+
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun start() {
         if (classifier != null) return
+        _isRunning.value = true
         Log.d("HearForMe", "Starting classifier")
 
         val baseOptions = BaseOptions.builder()
@@ -119,9 +126,7 @@ class MediaPipeAudioClassifier(
                     sum += (sample.toDouble() * sample.toDouble())
                 }
                 val rmsValue = sqrt(sum / limit.toDouble()).toFloat()
-                scope.launch {
-                    _rms.emit(rmsValue)
-                }
+                scope.launch { _rms.emit(rmsValue) }
 
                 val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
                 processResults(results)
@@ -144,23 +149,27 @@ class MediaPipeAudioClassifier(
 
         val topResultScore = topResult?.score() ?: 0f
         val topResultLabel = topResult?.categoryName() ?: textUnknownSound
-
-        if (topResultScore > threshold) {
-            val soundType = SoundType.fromLabel(topResultLabel)
-            if (soundType !is SoundType.Generic) {
-                val event = SoundEvent(
-                    type = soundType,
-                    confidence = topResultScore,
-                    timestamp = System.currentTimeMillis(),
-                )
-                scope.launch {
-                    _events.emit(event)
+        if (lastLabel != topResultLabel) {
+//            lastLabel = topResultLabel
+            Log.d("HearForMe", "Top result: $topResultLabel ($topResultScore)")
+            if (topResultScore > threshold) {
+                val soundType = SoundType.fromLabel(topResultLabel)
+                if (soundType !is SoundType.Generic) {
+                    val event = SoundEvent(
+                        type = soundType,
+                        confidence = topResultScore,
+                        timestamp = System.currentTimeMillis(),
+                    )
+                    scope.launch {
+                        _events.emit(event)
+                    }
                 }
             }
         }
     }
 
     override fun stop() {
+        _isRunning.value = false
         executor.shutdown()
         audioRecord?.stop()
         classifier?.close()

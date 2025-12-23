@@ -2,17 +2,16 @@ package com.typ.hearforme.manager
 
 import android.content.Context
 import android.hardware.camera2.CameraManager
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.util.Log
 import com.typ.hearforme.domain.manager.AlertManager
+import com.typ.hearforme.domain.manager.HapticEngine
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -25,6 +24,7 @@ class AlertManagerImpl(
     private val context: Context,
     private val settingsRepository: SettingsRepository,
     private val historyRepository: HistoryRepository,
+    private val hapticEngine: HapticEngine,
 ) : AlertManager {
 
     private val _activeAlert = MutableStateFlow<SoundEvent?>(null)
@@ -40,22 +40,55 @@ class AlertManagerImpl(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onSoundDetected(event: SoundEvent) {
-        // Save to persistent history
+        // Handle Silence: Reset UI state to identifying
+        if (event.type is SoundType.Silence) {
+            _activeAlert.value = null
+            Log.d("HearForMe", "Silence detected, resetting UI.")
+            return
+        }
+
+        val activeAlertLabel = _activeAlert.value?.type?.label ?: ""
+        if (event.type.label.equals(activeAlertLabel, true)) return
+
+        // * Set as active alert
+        _activeAlert.value = event
+        triggerFeedback(event.type.priority)
+
+        // * Save to persistent history
         scope.launch {
             historyRepository.saveEvent(event)
         }
 
-        // Check if we should show overlay (High/Critical)
-        if (event.confidence > 0.7f) {
-            _activeAlert.value = event
-            triggerFeedback(event.type.priority)
-        }
+        Log.d("HearForMe", "AlertManager::onSoundDetected '$event'.")
+    }
+
+    override suspend fun clearHistory() {
+        historyRepository.clearHistory()
     }
 
     override fun dismissAlert() {
         _activeAlert.value = null
     }
 
+    override fun triggerAlertFeedback(event: SoundEvent) {
+        triggerFeedback(event.type.priority)
+    }
+
+    /**
+     * Triggers a manual SOS alert.
+     *
+     * This function is designed to be invoked directly by the user in an emergency situation.
+     * It performs the following actions to maximize attention:
+     * 1. Creates a `SoundEvent` of type `AlarmSiren` with maximum confidence and sets it as the
+     *    `activeAlert`, which will typically display a full-screen alert UI.
+     * 2. Initiates an intense, rapid flashlight strobe effect (10 flashes) to provide a strong
+     *    visual cue. This is more aggressive than the standard alert strobe.
+     * 3. Triggers a "CRITICAL" priority haptic feedback pattern via the `hapticEngine`,
+     *    providing a powerful tactile alert.
+     *
+     * This function bypasses normal sound detection and user settings for feedback, ensuring that
+     * maximum visual and haptic feedback is always provided when the user requests SOS.
+     */
     override fun triggerSOS() {
         val sosEvent = SoundEvent(
             type = SoundType.AlarmSiren,
@@ -70,20 +103,32 @@ class AlertManagerImpl(
             val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
             repeat(10) {
                 cameraManager.setTorchMode(cameraId, true)
-                kotlinx.coroutines.delay(50)
+                delay(50)
                 cameraManager.setTorchMode(cameraId, false)
-                kotlinx.coroutines.delay(50)
+                delay(50)
             }
         }
 
-        // Critical vibration
-        vibrate(SoundType.Priority.CRITICAL)
+        // Critical vibration via engine
+        hapticEngine.vibrateForPriority(SoundType.Priority.CRITICAL)
     }
 
+    /**
+     * Triggers feedback mechanisms based on user settings and the priority of a detected sound.
+     *
+     * This function launches a coroutine to perform the feedback actions asynchronously. It checks
+     * the user's settings to determine whether to activate haptic feedback (vibration) and/or
+     * visual feedback (flashlight strobe).
+     *
+     * @param priority The priority level of the sound event, which determines the intensity
+     * and pattern of the feedback.
+     * @see HapticEngine.vibrateForPriority
+     * @see strobe
+     */
     private fun triggerFeedback(priority: SoundType.Priority) {
         scope.launch {
             if (settingsRepository.isVibrationEnabled.first()) {
-                vibrate(priority)
+                hapticEngine.vibrateForPriority(priority)
             }
             if (settingsRepository.isFlashlightEnabled.first()) {
                 strobe()
@@ -91,6 +136,15 @@ class AlertManagerImpl(
         }
     }
 
+    /**
+     * Triggers a strobe effect using the device's flashlight.
+     *
+     * This function accesses the camera service to control the torch (flashlight). It rapidly
+     * turns the flashlight on and off five times with a 100ms delay between each state change,
+     * creating a flashing or strobing effect. This is intended to serve as a visual alert.
+     * The operation is performed within a coroutine on a background thread. Any exceptions,
+     * such as issues accessing the camera, are caught and printed to the stack trace.
+     */
     private fun strobe() {
         val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         scope.launch {
@@ -98,33 +152,13 @@ class AlertManagerImpl(
                 val cameraId = cameraManager.cameraIdList.firstOrNull() ?: return@launch
                 repeat(5) {
                     cameraManager.setTorchMode(cameraId, true)
-                    kotlinx.coroutines.delay(100)
+                    delay(100)
                     cameraManager.setTorchMode(cameraId, false)
-                    kotlinx.coroutines.delay(100)
+                    delay(100)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
-    }
-
-    private fun vibrate(priority: SoundType.Priority) {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-            vibratorManager.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-        }
-
-        // Priority-based waveform patterns
-        val pattern = when (priority) {
-            SoundType.Priority.CRITICAL -> longArrayOf(0, 200, 100, 200, 100, 500, 100, 200) // Intense repeated
-            SoundType.Priority.HIGH -> longArrayOf(0, 300, 100, 300, 100, 300) // Triple pulse
-            SoundType.Priority.NORMAL -> longArrayOf(0, 400, 200, 400) // Double pulse
-            SoundType.Priority.LOW -> longArrayOf(0, 300) // Single pulse
-        }
-
-        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
     }
 }

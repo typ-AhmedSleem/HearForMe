@@ -1,17 +1,31 @@
 package com.typ.hearforme.presentation.dashboard
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,54 +34,106 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.typ.hearforme.designsystem.theme.OnBackground
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.TextSecondary
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun DashboardScreen(
-    currentEvent: SoundEvent? = null,
-    history: List<SoundEvent> = emptyList(),
-    rms: Float = 0f,
+    viewModel: DashboardViewModel = koinViewModel(),
     onNavigateToSettings: () -> Unit = {},
     onNavigateToHistory: () -> Unit = {},
     onNavigateToCommunication: () -> Unit = {},
     onSOSClick: () -> Unit = {},
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val history by viewModel.history.collectAsStateWithLifecycle()
+    val rms by viewModel.rms.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        viewModel.onPermissionResult(granted)
+    }
+
+    LaunchedEffect(Unit) {
+        val granted = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.RECORD_AUDIO
+        ) == PackageManager.PERMISSION_GRANTED
+        viewModel.onPermissionResult(granted)
+
+        viewModel.requestPermissionTrigger.collect {
+            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+
     Scaffold(
-        topBar = { DashboardTopBar(onNavigateToSettings, onSOSClick) },
+        topBar = {
+            DashboardTopBar(
+                isLive = uiState !is DashboardUiState.ServiceOffline && uiState !is DashboardUiState.MicAccessRequired,
+                onSettingsClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToSettings()
+                },
+                onSOSClick = {
+                    viewModel.performHapticFeedback()
+                    onSOSClick()
+                }
+            )
+        },
         bottomBar = {
             DashboardBottomBar(
-                onSettingsClick = onNavigateToSettings,
-                onHistoryClick = onNavigateToHistory,
-                onCommunicationClick = onNavigateToCommunication
+                onSettingsClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToSettings()
+                },
+                onHistoryClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToHistory()
+                },
+                onCommunicationClick = {
+                    viewModel.performHapticFeedback()
+                    onNavigateToCommunication()
+                }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
@@ -78,54 +144,72 @@ fun DashboardScreen(
                 .padding(innerPaddings)
                 .padding(horizontal = 20.dp)
         ) {
-            // Central Visualizer Area
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight(),
+                    .weight(1f)
+                    .animateContentSize(),
                 contentAlignment = Alignment.Center
             ) {
                 SoundVisualizer(
-                    currentEvent,
-                    rms = rms
+                    state = uiState,
+                    rms = rms,
+                    onClick = {
+                        when (uiState) {
+                            is DashboardUiState.MicAccessRequired -> viewModel.triggerPermissionRequest()
+                            is DashboardUiState.ServiceOffline -> viewModel.enableDetection()
+                            is DashboardUiState.Identified -> {
+                                if ((uiState as DashboardUiState.Identified).event.type is SoundType.SomeoneSpeaking) {
+                                    viewModel.disableDetection()
+                                    onNavigateToCommunication()
+                                }
+                            }
+                            else -> viewModel.performHapticFeedback()
+                        }
+                    }
                 )
             }
 
-            // History Section Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            AnimatedVisibility(
+                visible = history.isNotEmpty(),
+                enter = fadeIn(),
+                exit = fadeOut()
             ) {
-                Text(
-                    "PAST HOUR",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = TextSecondary,
-                    fontWeight = FontWeight.Bold
-                )
-                TextButton(onClick = onNavigateToHistory) {
-                    Text("See History", fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                }
-            }
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "Most recent",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = TextSecondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        TextButton(onClick = {
+                            viewModel.performHapticFeedback()
+                            onNavigateToHistory()
+                        }) {
+                            Text("See History", fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                        }
+                    }
 
-            // History List
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 24.dp)
-            ) {
-                items(history, key = { it.timestamp }) { event ->
-                    SoundHistoryItem(event)
-                }
-
-                // Mock items if empty
-                if (history.isEmpty()) {
-                    items(2) { index ->
-                        MockSoundHistoryItem(index)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(bottom = 24.dp)
+                    ) {
+                        items(
+                            items = history.take(1),
+                            key = { it.timestamp })
+                        { event ->
+                            SoundHistoryItem(event)
+                        }
                     }
                 }
             }
@@ -135,8 +219,9 @@ fun DashboardScreen(
 
 @Composable
 fun DashboardTopBar(
-    onSettingsClick: () -> Unit = {},
-    onSOSClick: () -> Unit = {},
+    isLive: Boolean,
+    onSettingsClick: () -> Unit,
+    onSOSClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -164,7 +249,10 @@ fun DashboardTopBar(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Live Indicator
+            val indicatorColor by animateColorAsState(
+                if (isLive) Color(0xFF4CAF50) else Color.LightGray,
+                label = "StatusColor"
+            )
             Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White,
@@ -178,112 +266,192 @@ fun DashboardTopBar(
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .background(Color(0xFF4CAF50), CircleShape)
+                            .background(indicatorColor, CircleShape)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("LIVE", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.DarkGray)
+                    Text(
+                        if (isLive) "LIVE" else "OFFLINE",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.DarkGray
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+//            Spacer(modifier = Modifier.width(12.dp))
 
-            IconButton(onClick = onSOSClick) {
+            /*IconButton(onClick = onSOSClick) {
                 Text("🚨", fontSize = 24.sp)
-            }
-
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Notifications, contentDescription = null, tint = OnBackground)
-            }
+            }*/
         }
     }
 }
 
 @Composable
-fun SoundVisualizer(event: SoundEvent?, rms: Float) {
+fun SoundVisualizer(
+    state: DashboardUiState,
+    rms: Float,
+    onClick: () -> Unit,
+) {
+    val soundIdentified by remember {
+        derivedStateOf {
+            state is DashboardUiState.Identified
+        }
+    }
+    val primaryColor = if (state is DashboardUiState.Identified) {
+        Color(state.event.type.color)
+    } else MaterialTheme.colorScheme.primary
+
     val pulseScale by animateFloatAsState(
-        targetValue = 1f + (rms * 5f).coerceAtMost(0.5f),
+        targetValue = if (soundIdentified) {
+            5f
+        } else if (state is DashboardUiState.ServiceOffline || state is DashboardUiState.MicAccessRequired) {
+            0.001f
+        } else {
+            1f + (rms * 10f).coerceAtMost(1f)
+        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioHighBouncy,
+            stiffness = Spring.StiffnessMediumLow,
+        ),
         label = "Pulse"
     )
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center) {
-            // Pulse Ring
-            Surface(
-                modifier = Modifier.size(220.dp * pulseScale),
-                shape = CircleShape,
-                color = PrimaryBlue.copy(alpha = 0.1f)
-            ) {}
-
-            // Inner Ring
+        Box(
+            modifier = Modifier
+                .size(280.dp)
+                .drawBehind {
+                    val radius = (size.minDimension / 2.25f) * pulseScale
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                primaryColor.copy(alpha = 0.7f * pulseScale),
+                                primaryColor.copy(alpha = 0.6f * pulseScale),
+                                primaryColor.copy(alpha = 0.5f * pulseScale),
+                                primaryColor.copy(alpha = 0.4f * pulseScale),
+                                primaryColor.copy(alpha = 0.3f * pulseScale),
+                                primaryColor.copy(alpha = 0.2f * pulseScale),
+                                Color.Transparent,
+                            ),
+                            center = center,
+                            radius = radius * 1.15f
+                        ),
+                        radius = radius * 1.15f,
+                        center = center
+                    )
+                }
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Surface(
                 modifier = Modifier.size(220.dp),
                 shape = CircleShape,
                 color = Color.White,
-                shadowElevation = 4.dp
+                shadowElevation = 8.dp
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     AnimatedContent(
-                        targetState = event,
+                        targetState = state,
                         transitionSpec = { fadeIn() togetherWith fadeOut() },
                         label = "VisualizerContent"
-                    ) { targetEvent ->
-                        if (targetEvent == null) {
-                            Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
-                        } else {
-                            Text(getEmojiForType(targetEvent.type), fontSize = 80.sp)
+                    ) { targetState ->
+                        when (targetState) {
+                            DashboardUiState.MicAccessRequired -> Text("🎤", fontSize = 80.sp, color = Color.LightGray)
+                            DashboardUiState.ServiceOffline -> Text("💤", fontSize = 80.sp, color = Color.LightGray)
+                            DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
+                            is DashboardUiState.Identified -> Text(targetState.event.type.emoji, fontSize = 80.sp)
                         }
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        // Status Badge
-        Surface(
-            color = OnBackground,
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier.height(32.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .background(Color(0xFFFFB703), CircleShape)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    if (event == null) "Analyzing Patterns..." else "High Match",
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold
-                )
+        AnimatedContent(
+            targetState = state,
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center,
+            transitionSpec = { fadeIn() + expandVertically() togetherWith fadeOut() + shrinkVertically() },
+        ) { currentState ->
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                when (currentState) {
+                    DashboardUiState.MicAccessRequired -> {
+                        Text("Microphone Required", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Tap to Grant Permission", color = TextSecondary, fontSize = 14.sp)
+                    }
+
+                    DashboardUiState.ServiceOffline -> {
+                        Text("Detection Offline", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("Tap to Start Listening", color = TextSecondary, fontSize = 14.sp)
+                    }
+
+                    DashboardUiState.Identifying -> {
+//                StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Listening...", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+                    }
+
+                    is DashboardUiState.Identified -> {
+                        val event = currentState.event
+                        Spacer(modifier = Modifier.height(16.dp))
+                        StatusBadge(
+                            color = Color(event.type.color),
+                            text = "${(event.confidence * 100).toInt()}% Confident"
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            event.type.displayName,
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Text("Tap on the bubble to see what he's saying...", color = TextSecondary, fontSize = 14.sp)
+                    }
+                }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = event?.type?.displayName ?: "Unidentified\nSound",
-            style = MaterialTheme.typography.displaySmall,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            maxLines = 2
-        )
     }
 }
 
 @Composable
-fun SoundHistoryItem(event: SoundEvent) {
+fun StatusBadge(color: Color, text: String) {
+    Surface(
+        color = OnBackground,
+        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier.height(32.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(color, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@Composable
+fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateItem(),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -292,17 +460,17 @@ fun SoundHistoryItem(event: SoundEvent) {
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0xFFFFF5F5), RoundedCornerShape(16.dp)),
+                    .background(Color(event.type.color).copy(alpha = 0.1f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(getEmojiForType(event.type), fontSize = 24.sp)
+                Text(event.type.emoji, fontSize = 24.sp)
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(event.type.displayName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("Room • High Match", color = TextSecondary, fontSize = 14.sp)
+                Text("${(event.confidence * 100).toInt()}% Confidence", color = TextSecondary, fontSize = 14.sp)
             }
 
             Text("Now", color = TextSecondary, fontSize = 14.sp)
@@ -311,98 +479,84 @@ fun SoundHistoryItem(event: SoundEvent) {
 }
 
 @Composable
-fun MockSoundHistoryItem(index: Int) {
-    val (name, emoji, color) = when (index) {
-        0 -> Triple("Doorbell", "🏠", Color(0xFFFFF7ED))
-        1 -> Triple("Dog Barking", "🐕", Color(0xFFEEF2FF))
-        else -> Triple("Running Water", "💧", Color(0xFFECFEFF))
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(56.dp)
-                    .background(color, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(emoji, fontSize = 24.sp)
-            }
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("Living Room • Medium Match", color = TextSecondary, fontSize = 14.sp)
-            }
-
-            val time = when (index) {
-                0 -> "2m"
-                1 -> "15m"
-                else -> "42m"
-            }
-            Text(time, color = TextSecondary, fontSize = 14.sp)
-        }
-    }
-}
-
-@Composable
 fun DashboardBottomBar(
-    onSettingsClick: () -> Unit = {},
-    onHistoryClick: () -> Unit = {},
-    onCommunicationClick: () -> Unit = {},
+    onSettingsClick: () -> Unit,
+    onHistoryClick: () -> Unit,
+    onCommunicationClick: () -> Unit,
 ) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        shape = RoundedCornerShape(32.dp),
-        color = Color.White,
-        shadowElevation = 8.dp
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
     ) {
-        Row(
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
+                .wrapContentWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp)
                 .height(72.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            shadowElevation = 8.dp
         ) {
-            // Active listening button -> Communication / Stats
-            Surface(
-                modifier = Modifier.size(50.dp),
-                shape = RoundedCornerShape(16.dp),
-                color = OnBackground,
-                onClick = onCommunicationClick
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(
+                        horizontal = 16.dp
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(
+                    alignment = Alignment.CenterHorizontally,
+                    space = 32.dp,
+                ),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text("📊", fontSize = 20.sp)
+                IconButton(
+                    onClick = onCommunicationClick,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.size(50.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            "💬",
+                            fontSize = 24.sp,
+                            color = MaterialTheme.colorScheme.surface
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = onHistoryClick,
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.size(50.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Text(
+                        "🕓",
+                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.surface
+                    )
+                }
+
+                IconButton(
+                    shape = RoundedCornerShape(24.dp),
+                    onClick = onSettingsClick,
+                    modifier = Modifier.size(50.dp),
+                    colors = IconButtonDefaults.filledIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                ) {
+                    Icon(
+                        contentDescription = null,
+                        imageVector = Icons.Default.Settings,
+                        tint = MaterialTheme.colorScheme.surface
+                    )
                 }
             }
-
-            IconButton(onClick = onHistoryClick) {
-                Text("🕓", fontSize = 24.sp)
-            }
-
-            IconButton(onClick = onSettingsClick) {
-                Icon(Icons.Default.Settings, contentDescription = null, tint = TextSecondary)
-            }
         }
     }
-}
-
-fun getEmojiForType(type: SoundType): String = when (type) {
-    SoundType.BabyCrying -> "👶"
-    SoundType.Doorbell -> "🏠"
-    SoundType.AlarmSiren -> "🚨"
-    SoundType.DogBarking -> "🐕"
-    SoundType.SmokeAlarm -> "🔥"
-    else -> "❓"
 }

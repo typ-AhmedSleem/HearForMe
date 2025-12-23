@@ -1,12 +1,11 @@
 package com.typ.hearforme.presentation.alerts
 
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.LocalActivity
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColor
-import androidx.compose.animation.core.EaseInOutSine
-import androidx.compose.animation.core.InfiniteRepeatableSpec
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
@@ -28,24 +27,63 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.typ.hearforme.domain.model.SoundEvent
-import com.typ.hearforme.presentation.dashboard.getEmojiForType
+import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.presentation.dashboard.DashboardViewModel
+import kotlinx.coroutines.delay
+import org.koin.compose.viewmodel.koinViewModel
 
 
 @Composable
 fun AlertOverlay(
     event: SoundEvent,
     onDismiss: () -> Unit,
+    viewModel: DashboardViewModel = koinViewModel(),
 ) {
-    val infiniteTransition = rememberInfiniteTransition(label = "FlashTransition")
+    if (event.type.priority == SoundType.Priority.CRITICAL) {
+        LaunchedEffect(event) {
+            while (true) {
+                viewModel.triggerAlertFeedback(event)
+                delay(3000)
+            }
+        }
+    }
+
+    val parentActivity = LocalActivity.current
+    DisposableEffect(Unit) {
+        val scrimColor = Color(event.type.color).toArgb()
+        try {
+            with(parentActivity!! as ComponentActivity) {
+                val style = SystemBarStyle.light(scrimColor, scrimColor)
+                enableEdgeToEdge(style, style)
+            }
+        } catch (e: Throwable) {
+            e.printStackTrace()
+        }
+        onDispose {
+            val scrimColor = Color.Transparent.toArgb()
+            try {
+                with(parentActivity!! as ComponentActivity) {
+                    val style = SystemBarStyle.light(scrimColor, scrimColor)
+                    enableEdgeToEdge(style, style)
+                }
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    rememberInfiniteTransition(label = "FlashTransition")
     val typeColor = Color(event.type.color)
 
     Box(
@@ -86,7 +124,7 @@ fun AlertOverlay(
                         .background(Color.White.copy(alpha = 0.15f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(getEmojiForType(event.type), fontSize = 100.sp)
+                    Text(event.type.emoji, fontSize = 100.sp)
                 }
 
                 Spacer(modifier = Modifier.height(32.dp))
@@ -127,7 +165,7 @@ fun AlertOverlay(
                         Text("Dismiss", fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    Surface(
+                    /*Surface(
                         modifier = Modifier.size(64.dp),
                         shape = RoundedCornerShape(24.dp),
                         color = Color.White.copy(alpha = 0.2f),
@@ -136,7 +174,7 @@ fun AlertOverlay(
                         Box(contentAlignment = Alignment.Center) {
                             Text("🔕", fontSize = 24.sp)
                         }
-                    }
+                    }*/
                 }
             }
         }
