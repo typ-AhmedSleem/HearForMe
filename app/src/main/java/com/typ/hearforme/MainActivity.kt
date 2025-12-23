@@ -5,14 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.typ.hearforme.designsystem.theme.HearForMeTheme
 import com.typ.hearforme.di.appModule
 import com.typ.hearforme.presentation.navigation.MainNavigation
-import org.koin.android.ext.koin.androidContext
-import org.koin.android.ext.koin.androidLogger
-import org.koin.core.context.startKoin
+import com.typ.hearforme.presentation.preview.PreviewContainer
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,13 +27,7 @@ class MainActivity : ComponentActivity() {
 @Preview
 @Composable
 private fun MainActivityPreview() {
-    val ctx = LocalContext.current
-    startKoin {
-        androidLogger()
-        androidContext(ctx)
-        modules(appModule)
-    }
-    HearForMeTheme {
+    PreviewContainer(modules = listOf(appModule)) {
         MainNavigation()
     }
 }
