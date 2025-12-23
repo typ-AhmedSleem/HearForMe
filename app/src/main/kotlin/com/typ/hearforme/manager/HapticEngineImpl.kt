@@ -29,7 +29,7 @@ class HapticEngineImpl(context: Context) : HapticEngine {
     }
 
     override fun performInteractionFeedback() {
-        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK))
+        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK))
     }
 
     override fun vibrate(pattern: LongArray, repeat: Int) {
