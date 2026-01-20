@@ -34,9 +34,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -51,15 +53,15 @@ fun CommunicationScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Live Transcribe", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.communication_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.clearTranscription() }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear")
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.clear))
                     }
                 }
             )
@@ -88,7 +90,7 @@ fun CommunicationScreen(
                 Column {
                     Text(
                         text = if (uiState.transcribedText.isEmpty() && uiState.partialTranscription.isEmpty())
-                            "Tap the mic and start speaking Arabic..." else uiState.transcribedText,
+                            stringResource(R.string.communication_hint) else uiState.transcribedText,
                         style = MaterialTheme.typography.headlineSmall,
                         color = if (uiState.transcribedText.isEmpty())
                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -125,7 +127,7 @@ fun CommunicationScreen(
                         } else {
                             Icons.Outlined.Call
                         },
-                        contentDescription = "Mic",
+                        contentDescription = stringResource(R.string.mic),
                         modifier = Modifier.size(40.dp)
                     )
                 }
@@ -133,7 +135,7 @@ fun CommunicationScreen(
                 if (uiState.isListening) {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Listening...",
+                        stringResource(R.string.communication_listening),
                         fontWeight = FontWeight.Bold,
                         color = PrimaryBlue,
                     )
