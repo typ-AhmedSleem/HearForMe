@@ -25,9 +25,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.dashboard.SoundHistoryItem
@@ -47,15 +49,15 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detection History", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { viewModel.clearHistory() }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Clear All")
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.clear_all))
                     }
                 }
             )
@@ -70,7 +72,11 @@ fun HistoryScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text("🏜️", fontSize = 64.sp)
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("No detections yet", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        stringResource(R.string.history_empty_state),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         } else {
