@@ -9,6 +9,7 @@ import android.content.pm.ServiceInfo
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.classifier.AudioClassifier
 import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.policy.DetectionPolicy
@@ -67,7 +68,7 @@ class SoundDetectionService : Service() {
 
     private fun startForegroundService() {
         val channelId = "sound_detection_channel"
-        val channelName = "Sound Detection"
+        val channelName = getString(R.string.notification_channel_name)
 
         val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_LOW)
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
@@ -81,11 +82,11 @@ class SoundDetectionService : Service() {
         )
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Hear for Me is listening")
-            .setContentText("Detecting sounds in background...")
+            .setContentTitle(getString(R.string.notification_title))
+            .setContentText(getString(R.string.notification_text))
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .addAction(android.R.drawable.ic_media_pause, "Stop Detection", stopPendingIntent)
+            .addAction(android.R.drawable.ic_media_pause, getString(R.string.notification_action_stop), stopPendingIntent)
             .build()
 
         startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE)
