@@ -36,10 +36,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
+import com.typ.hearforme.domain.model.SoundType
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,10 +56,10 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Sound Settings", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.settings_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 }
             )
@@ -80,9 +83,13 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text("Active Listening", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         Text(
-                            "Continuous background detection",
+                            stringResource(R.string.settings_active_listening),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            stringResource(R.string.settings_active_listening_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -96,19 +103,24 @@ fun SettingsScreen(
             }
 
             // Hardware Alerts Card
-            Text("Alert Methods", style = MaterialTheme.typography.labelLarge, color = PrimaryBlue, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.settings_alert_methods),
+                style = MaterialTheme.typography.labelLarge,
+                color = PrimaryBlue,
+                fontWeight = FontWeight.Bold
+            )
             SettingsCard {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
                     SettingToggleItem(
-                        title = "Flashlight Strobe",
-                        subtitle = "Blink flash on detection",
+                        title = stringResource(R.string.settings_flashlight),
+                        subtitle = stringResource(R.string.settings_flashlight_desc),
                         checked = uiState.isFlashlightEnabled,
                         onCheckedChange = { viewModel.toggleFlashlight(it) }
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     SettingToggleItem(
-                        title = "Vibration Pattern",
-                        subtitle = "Haptic feedback for alerts",
+                        title = stringResource(R.string.settings_vibration),
+                        subtitle = stringResource(R.string.settings_vibration_desc),
                         checked = uiState.isVibrationEnabled,
                         onCheckedChange = { viewModel.toggleVibration(it) }
                     )
@@ -116,7 +128,12 @@ fun SettingsScreen(
             }
 
             // Per-Sound Customization
-            Text("Detection Sensitivity", style = MaterialTheme.typography.labelLarge, color = PrimaryBlue, fontWeight = FontWeight.Bold)
+            Text(
+                stringResource(R.string.settings_detection_sensitivity),
+                style = MaterialTheme.typography.labelLarge,
+                color = PrimaryBlue,
+                fontWeight = FontWeight.Bold
+            )
             uiState.soundSettings.forEach { setting ->
                 SoundSettingItem(
                     setting = setting,
@@ -190,7 +207,15 @@ fun SoundSettingItem(
                         Text(setting.type.emoji, fontSize = 20.sp)
                     }
                     Spacer(modifier = Modifier.width(16.dp))
-                    Text(setting.type.displayName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = if (setting.type.nameRes != 0) {
+                            stringResource(setting.type.nameRes)
+                        } else {
+                            (setting.type as? SoundType.Generic)?.displayName ?: ""
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Switch(
                     checked = setting.isEnabled,
@@ -202,7 +227,11 @@ fun SoundSettingItem(
             AnimatedVisibility(setting.isEnabled) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Sensitivity", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(
+                        stringResource(R.string.settings_sensitivity),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
                     Slider(
                         value = setting.sensitivity,
