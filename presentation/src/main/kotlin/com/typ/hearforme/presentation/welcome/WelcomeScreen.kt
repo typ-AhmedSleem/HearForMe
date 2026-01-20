@@ -30,10 +30,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.PrimaryGradient
 
@@ -65,7 +67,7 @@ fun WelcomeScreen(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                text = "Hear for Me",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground
@@ -88,7 +90,7 @@ fun WelcomeScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         ) {
             Text(
-                text = "See the sounds\naround you",
+                text = stringResource(R.string.welcome_tagline),
                 style = MaterialTheme.typography.displayLarge.copy(
                     fontSize = 36.sp,
                     lineHeight = 44.sp
@@ -101,7 +103,7 @@ fun WelcomeScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Your phone listens for alarms, voices, and sirens, notifying you instantly.",
+                text = stringResource(R.string.welcome_desc),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -119,7 +121,7 @@ fun WelcomeScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Get Started", fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.get_started), fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
                     Spacer(modifier = Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Default.ArrowForward, contentDescription = null)
                 }
@@ -183,7 +185,7 @@ fun WelcomeGraphics() {
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    "ALERT\nVisual",
+                    stringResource(R.string.welcome_feature_visual),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -202,7 +204,7 @@ fun WelcomeGraphics() {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
 //                Text("FEEL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.Gray)
                 Text(
-                    "FEEL\nHaptics",
+                    stringResource(R.string.welcome_feature_haptics),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
