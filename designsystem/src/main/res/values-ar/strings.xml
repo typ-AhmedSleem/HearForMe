@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="app_name">اسمع لي</string>
+    <string name="back">رجوع</string>
+    <string name="dismiss">تجاهل</string>
+    <string name="clear_all">مسح الكل</string>
+    <string name="get_started">ابدأ الآن</string>
+    <string name="next">التالي</string>
+    <string name="clear">مسح</string>
+    <string name="mic">ميكروفون</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_title_1">كشف الأصوات</string>
+    <string name="onboarding_desc_1">يتعرف ذكاؤنا الاصطناعي على الأصوات التحذيرية مثل بكاء الطفل، جرس الباب، والإنذارات في الوقت الفعلي.</string>
+    <string name="onboarding_title_2">تنبيهات فورية</string>
+    <string name="onboarding_desc_2">احصل على تنبيهات من خلال ومضات بصرية، أنماط اهتزاز، وتنبيهات النظام.</string>
+    <string name="onboarding_title_3">الأذونات الأساسية</string>
+    <string name="onboarding_desc_3">نحتاج للوصول إلى الميكروفون والتنبيهات للحفاظ على سلامتك.</string>
+    <string name="onboarding_title_final">أنت مستعد تماماً!</string>
+    <string name="onboarding_desc_final">ابدأ في رؤية العالم من خلال عينيك ولمسك.</string>
+    <string name="welcome_tagline">شاهد الأصوات\nمن حولك</string>
+    <string name="welcome_desc">هاتفك يستمع للإنذارات، الأصوات، وصفارات الإنذار، وينبهك فوراً.</string>
+    <string name="welcome_feature_visual">تنبيه\nبصري</string>
+    <string name="welcome_feature_haptics">شعور\nلمسي</string>
+
+    <!-- Communication Screen -->
+    <string name="communication_title">النسخ المباشر</string>
+    <string name="communication_hint">اضغط على الميكروفون وابدأ التحدث باللغة العربية…</string>
+    <string name="communication_listening">جاري الاستماع…</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_most_recent">الأحدث</string>
+    <string name="see_history">عرض السجل</string>
+    <string name="status_live">مباشر</string>
+    <string name="status_offline">غير متصل</string>
+    <string name="dashboard_mic_required">الميكروفون مطلوب</string>
+    <string name="dashboard_grant_permission">اضغط لمنح الإذن</string>
+    <string name="dashboard_detection_offline">الكشف متوقف</string>
+    <string name="dashboard_start_listening">اضغط لبدء الاستماع</string>
+    <string name="dashboard_listening">جاري الاستماع…</string>
+    <string name="dashboard_confidence_percentage">%1$d%% واثق</string>
+    <string name="dashboard_confidence">%1$d%% درجة الثقة</string>
+    <string name="dashboard_tap_to_see">اضغط على الفقاعة لترى ما يقوله…</string>
+    <string name="time_now">الآن</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">إعدادات الصوت</string>
+    <string name="settings_active_listening">الاستماع النشط</string>
+    <string name="settings_active_listening_desc">الكشف المستمر في الخلفية</string>
+    <string name="settings_alert_methods">طرق التنبيه</string>
+    <string name="settings_flashlight">وميض الكشاف</string>
+    <string name="settings_flashlight_desc">وميض الضوء عند الكشف</string>
+    <string name="settings_vibration">نمط الاهتزاز</string>
+    <string name="settings_vibration_desc">ردود فعل لمسية للتنبيهات</string>
+    <string name="settings_detection_sensitivity">حساسية الكشف</string>
+    <string name="settings_sensitivity">الحساسية</string>
+
+    <!-- History Screen -->
+    <string name="history_title">سجل الكشف</string>
+    <string name="history_empty_state">لا توجد عمليات كشف بعد</string>
+
+    <!-- Alerts -->
+    <string name="alert_title_template">تنبيه %1$s</string>
+    <string name="alert_message">تم اكتشافه في محيطك المباشر.\nيرجى التحقق على الفور.</string>
+
+    <!-- Notification Service -->
+    <string name="notification_channel_name">كشف الصوت</string>
+    <string name="notification_title">اسمع لي يستمع</string>
+    <string name="notification_text">جاري كشف الأصوات في الخلفية…</string>
+    <string name="notification_action_stop">إيقاف الكشف</string>
+
+    <!-- Sound Types -->
+    <string name="sound_type_baby_crying">بكاء طفل</string>
+    <string name="sound_type_doorbell">جرس الباب</string>
+    <string name="sound_type_siren">صفارة إنذار</string>
+    <string name="sound_type_someone_speaking">شخص يتحدث</string>
+    <string name="sound_type_dog_barking">نباح كلب</string>
+    <string name="sound_type_microwave_done">انتهاء الميكروويف</string>
+    <string name="sound_type_silence">هدوء</string>
+
+    <!-- Errors -->
+    <string name="error_speech_recognition">خطأ في التعرف على الكلام: %1$d</string>
+    <string name="error_tts_failed">فشل تهيئة تحويل النص إلى كلام</string>
+    <string name="error_tts_lang_not_supported">اللغة %1$s غير مدعومة</string>
+</resources>
