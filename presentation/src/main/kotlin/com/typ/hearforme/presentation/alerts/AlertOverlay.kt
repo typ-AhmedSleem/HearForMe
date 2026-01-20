@@ -33,10 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
@@ -108,7 +110,7 @@ fun AlertOverlay(
                     modifier = Modifier.padding(bottom = 48.dp)
                 ) {
                     Text(
-                        "${event.type.priority.name} ALERT",
+                        stringResource(R.string.alert_title_template, event.type.priority.name),
                         color = Color.White,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
                         fontWeight = FontWeight.Bold,
@@ -130,7 +132,7 @@ fun AlertOverlay(
                 Spacer(modifier = Modifier.height(32.dp))
 
                 Text(
-                    text = event.type.displayName,
+                    text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName ?: "",
                     style = MaterialTheme.typography.displayMedium,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
@@ -140,7 +142,7 @@ fun AlertOverlay(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Detected in your immediate vicinity.\nPlease check at once.",
+                    text = stringResource(R.string.alert_message),
                     color = Color.White.copy(alpha = 0.8f),
                     textAlign = TextAlign.Center,
                     fontSize = 18.sp,
@@ -162,7 +164,7 @@ fun AlertOverlay(
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black)
                     ) {
-                        Text("Dismiss", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.dismiss), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
 
                     /*Surface(
