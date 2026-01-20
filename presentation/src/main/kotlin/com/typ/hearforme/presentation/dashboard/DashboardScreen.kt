@@ -63,12 +63,14 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.OnBackground
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.TextSecondary
@@ -184,7 +186,7 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "Most recent",
+                            stringResource(R.string.dashboard_most_recent),
                             style = MaterialTheme.typography.labelLarge,
                             color = TextSecondary,
                             fontWeight = FontWeight.Bold
@@ -193,7 +195,7 @@ fun DashboardScreen(
                             viewModel.performHapticFeedback()
                             onNavigateToHistory()
                         }) {
-                            Text("See History", fontWeight = FontWeight.Bold, color = PrimaryBlue)
+                            Text(stringResource(R.string.see_history), fontWeight = FontWeight.Bold, color = PrimaryBlue)
                         }
                     }
 
@@ -242,7 +244,7 @@ fun DashboardTopBar(
             }
             Spacer(modifier = Modifier.width(12.dp))
             Text(
-                "Hear for Me",
+                stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -270,7 +272,7 @@ fun DashboardTopBar(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        if (isLive) "LIVE" else "OFFLINE",
+                        if (isLive) stringResource(R.string.status_live) else stringResource(R.string.status_offline),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.DarkGray
@@ -382,21 +384,25 @@ fun SoundVisualizer(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 when (currentState) {
                     DashboardUiState.MicAccessRequired -> {
-                        Text("Microphone Required", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text(stringResource(R.string.dashboard_mic_required), fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Tap to Grant Permission", color = TextSecondary, fontSize = 14.sp)
+                        Text(stringResource(R.string.dashboard_grant_permission), color = TextSecondary, fontSize = 14.sp)
                     }
 
                     DashboardUiState.ServiceOffline -> {
-                        Text("Detection Offline", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                        Text(stringResource(R.string.dashboard_detection_offline), fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Tap to Start Listening", color = TextSecondary, fontSize = 14.sp)
+                        Text(stringResource(R.string.dashboard_start_listening), color = TextSecondary, fontSize = 14.sp)
                     }
 
                     DashboardUiState.Identifying -> {
 //                StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Listening...", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.dashboard_listening),
+                            style = MaterialTheme.typography.displaySmall,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     is DashboardUiState.Identified -> {
@@ -404,16 +410,17 @@ fun SoundVisualizer(
                         Spacer(modifier = Modifier.height(16.dp))
                         StatusBadge(
                             color = Color(event.type.color),
-                            text = "${(event.confidence * 100).toInt()}% Confident"
+                            text = stringResource(R.string.dashboard_confidence_percentage, (event.confidence * 100).toInt())
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            event.type.displayName,
+                            text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName
+                                ?: "",
                             style = MaterialTheme.typography.displaySmall,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
-                        Text("Tap on the bubble to see what he's saying...", color = TextSecondary, fontSize = 14.sp)
+                        Text(stringResource(R.string.dashboard_tap_to_see), color = TextSecondary, fontSize = 14.sp)
                     }
                 }
             }
@@ -469,11 +476,15 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(event.type.displayName, fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                Text("${(event.confidence * 100).toInt()}% Confidence", color = TextSecondary, fontSize = 14.sp)
+                Text(
+                    text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName ?: "",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+                Text(stringResource(R.string.dashboard_confidence, (event.confidence * 100).toInt()), color = TextSecondary, fontSize = 14.sp)
             }
 
-            Text("Now", color = TextSecondary, fontSize = 14.sp)
+            Text(stringResource(R.string.time_now), color = TextSecondary, fontSize = 14.sp)
         }
     }
 }
