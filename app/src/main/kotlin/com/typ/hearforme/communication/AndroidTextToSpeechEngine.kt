@@ -2,6 +2,7 @@ package com.typ.hearforme.communication
 
 import android.content.Context
 import android.speech.tts.TextToSpeech
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.communication.TextToSpeechEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +21,7 @@ class AndroidTextToSpeechEngine(private val context: Context) : TextToSpeechEngi
     init {
         tts = TextToSpeech(context) { status ->
             if (status == TextToSpeech.ERROR) {
-                _error.value = "Failed to initialize TTS"
+                _error.value = context.getString(R.string.error_tts_failed)
             }
         }
     }
@@ -30,7 +31,7 @@ class AndroidTextToSpeechEngine(private val context: Context) : TextToSpeechEngi
             val locale = Locale(language)
             val result = setLanguage(locale)
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                _error.value = "Language $language not supported"
+                _error.value = context.getString(R.string.error_tts_lang_not_supported, language)
                 return
             }
 
