@@ -25,10 +25,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 
 internal const val ONBOARDING_LAST_STEP_INDEX = 4
@@ -38,6 +41,7 @@ fun OnboardingScreen(
     step: Int,
     onNext: () -> Unit,
 ) {
+    val localView = LocalView.current
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -48,17 +52,17 @@ fun OnboardingScreen(
     }
 
     val title = when (step) {
-        1 -> "Sound Detection"
-        2 -> "Instant Notifications"
-        3 -> "Essential Permissions"
-        else -> "You're All Set!"
+        1 -> stringResource(R.string.onboarding_title_1)
+        2 -> stringResource(R.string.onboarding_title_2)
+        3 -> stringResource(R.string.onboarding_title_3)
+        else -> stringResource(R.string.onboarding_title_final)
     }
 
     val description = when (step) {
-        1 -> "Our AI identifies warning sounds like baby crying, doorbells, and alarms in real-time."
-        2 -> "Get notified through visual flashes, vibration patterns, and system alerts."
-        3 -> "We need access to your microphone and notifications to keep you safe."
-        else -> "Start hearing the world through your eyes and touch."
+        1 -> stringResource(R.string.onboarding_desc_1)
+        2 -> stringResource(R.string.onboarding_desc_2)
+        3 -> stringResource(R.string.onboarding_desc_3)
+        else -> stringResource(R.string.onboarding_desc_final)
     }
 
     Column(
@@ -140,7 +144,7 @@ fun OnboardingScreen(
 
         Button(
             onClick = {
-                if (step == 3) {
+                if (step == 3 && !localView.isInEditMode) {
                     val permissions = mutableListOf(Manifest.permission.RECORD_AUDIO)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         permissions.add(Manifest.permission.POST_NOTIFICATIONS)
@@ -161,7 +165,7 @@ fun OnboardingScreen(
             colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue)
         ) {
             Text(
-                if (step >= ONBOARDING_LAST_STEP_INDEX) "Get Started" else "Next",
+                if (step >= ONBOARDING_LAST_STEP_INDEX) stringResource(R.string.get_started) else stringResource(R.string.next),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold
             )
