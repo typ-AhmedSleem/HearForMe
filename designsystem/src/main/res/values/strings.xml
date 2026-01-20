@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common -->
+    <string name="app_name">Hear for Me</string>
+    <string name="back">Back</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="clear_all">Clear All</string>
+    <string name="get_started">Get Started</string>
+    <string name="next">Next</string>
+    <string name="clear">Clear</string>
+    <string name="mic">Mic</string>
+
+    <!-- Onboarding Screen -->
+    <string name="onboarding_title_1">Sound Detection</string>
+    <string name="onboarding_desc_1">Our AI identifies warning sounds like baby crying, doorbells, and alarms in real-time.</string>
+    <string name="onboarding_title_2">Instant Notifications</string>
+    <string name="onboarding_desc_2">Get notified through visual flashes, vibration patterns, and system alerts.</string>
+    <string name="onboarding_title_3">Essential Permissions</string>
+    <string name="onboarding_desc_3">We need access to your microphone and notifications to keep you safe.</string>
+    <string name="onboarding_title_final">You\'re All Set!</string>
+    <string name="onboarding_desc_final">Start hearing the world through your eyes and touch.</string>
+    <string name="welcome_tagline">See the sounds\naround you</string>
+    <string name="welcome_desc">Your phone listens for alarms, voices, and sirens, notifying you instantly.</string>
+    <string name="welcome_feature_visual">ALERT\nVisual</string>
+    <string name="welcome_feature_haptics">FEEL\nHaptics</string>
+
+    <!-- Communication Screen -->
+    <string name="communication_title">Live Transcribe</string>
+    <string name="communication_hint">Tap the mic and start speaking Arabic…</string>
+    <string name="communication_listening">Listening…</string>
+
+    <!-- Dashboard Screen -->
+    <string name="dashboard_most_recent">Most recent</string>
+    <string name="see_history">See History</string>
+    <string name="status_live">LIVE</string>
+    <string name="status_offline">OFFLINE</string>
+    <string name="dashboard_mic_required">Microphone Required</string>
+    <string name="dashboard_grant_permission">Tap to Grant Permission</string>
+    <string name="dashboard_detection_offline">Detection Offline</string>
+    <string name="dashboard_start_listening">Tap to Start Listening</string>
+    <string name="dashboard_listening">Listening…</string>
+    <string name="dashboard_confidence_percentage">%1$d%% Confident</string>
+    <string name="dashboard_confidence">%1$d%% Confidence</string>
+    <string name="dashboard_tap_to_see">Tap on the bubble to see what he\'s saying…</string>
+    <string name="time_now">Now</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Sound Settings</string>
+    <string name="settings_active_listening">Active Listening</string>
+    <string name="settings_active_listening_desc">Continuous background detection</string>
+    <string name="settings_alert_methods">Alert Methods</string>
+    <string name="settings_flashlight">Flashlight Strobe</string>
+    <string name="settings_flashlight_desc">Blink flash on detection</string>
+    <string name="settings_vibration">Vibration Pattern</string>
+    <string name="settings_vibration_desc">Haptic feedback for alerts</string>
+    <string name="settings_detection_sensitivity">Detection Sensitivity</string>
+    <string name="settings_sensitivity">Sensitivity</string>
+
+    <!-- History Screen -->
+    <string name="history_title">Detection History</string>
+    <string name="history_empty_state">No detections yet</string>
+
+    <!-- Alerts -->
+    <string name="alert_title_template">%1$s ALERT</string>
+    <string name="alert_message">Detected in your immediate vicinity.\nPlease check at once.</string>
+
+    <!-- Notification Service -->
+    <string name="notification_channel_name">Sound Detection</string>
+    <string name="notification_title">Hear for Me is listening</string>
+    <string name="notification_text">Detecting sounds in background…</string>
+    <!-- Sound Types -->
+    <string name="sound_type_baby_crying">Baby Crying</string>
+    <string name="sound_type_doorbell">Doorbell</string>
+    <string name="sound_type_siren">Siren</string>
+    <string name="sound_type_someone_speaking">Someone Speaking</string>
+    <string name="sound_type_dog_barking">Dog Barking</string>
+    <string name="sound_type_microwave_done">Microwave Done</string>
+    <string name="sound_type_silence">Silence</string>
+
+    <!-- Errors -->
+    <string name="error_speech_recognition">Speech recognition error: %1$d</string>
+    <string name="error_tts_failed">Failed to initialize TTS</string>
+    <string name="error_tts_lang_not_supported">Language %1$s not supported</string>
+    <string name="notification_action_stop">Stop detection</string>
+</resources>
