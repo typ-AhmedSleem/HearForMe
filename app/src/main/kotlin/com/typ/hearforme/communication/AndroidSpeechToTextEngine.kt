@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.communication.SpeechToTextEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,7 +43,7 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
 
             override fun onError(error: Int) {
                 _isListening.value = false
-                _error.value = "Speech recognition error: $error"
+                _error.value = context.getString(R.string.error_speech_recognition, error)
             }
 
             override fun onResults(results: Bundle?) {
