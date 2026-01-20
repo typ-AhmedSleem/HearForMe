@@ -1,7 +1,9 @@
 package com.typ.hearforme.domain.model
 
+import com.typ.hearforme.designsystem.R
+
 sealed class SoundType(
-    val displayName: String,
+    val nameRes: Int,
     val label: String,
     val priority: Priority,
     val color: Long, // ARGB color code
@@ -11,7 +13,7 @@ sealed class SoundType(
 
     // Explicit high-priority types for deaf safety
     data object BabyCrying : SoundType(
-        displayName = "Baby Crying",
+        nameRes = R.string.sound_type_baby_crying,
         label = "cry",
         priority = Priority.HIGH,
         color = 0xFFE91E63,
@@ -19,7 +21,7 @@ sealed class SoundType(
     )
 
     data object Doorbell : SoundType(
-        displayName = "Doorbell",
+        nameRes = R.string.sound_type_doorbell,
         label = "bell",
         priority = Priority.HIGH,
         color = 0xFFFF9800,
@@ -27,7 +29,7 @@ sealed class SoundType(
     )
 
     data object AlarmSiren : SoundType(
-        displayName = "Siren",
+        nameRes = R.string.sound_type_siren,
         label = "siren",
         priority = Priority.CRITICAL,
         color = 0xFFF44336,
@@ -35,7 +37,7 @@ sealed class SoundType(
     )
 
     data object SomeoneSpeaking : SoundType(
-        displayName = "Someone Speaking",
+        nameRes = R.string.sound_type_someone_speaking,
         label = "speech",
         priority = Priority.LOW,
         color = 0xFFF44336,
@@ -43,7 +45,7 @@ sealed class SoundType(
     )
 
     data object DogBarking : SoundType(
-        displayName = "Dog Barking",
+        nameRes = R.string.sound_type_dog_barking,
         label = "dog",
         priority = Priority.HIGH,
         color = 0xFF795548,
@@ -51,7 +53,7 @@ sealed class SoundType(
     )
 
     data object RunningWater : SoundType(
-        displayName = "Microwave Done",
+        nameRes = R.string.sound_type_microwave_done,
         label = "Beep",
         priority = Priority.NORMAL,
         color = 0xFF2196F3,
@@ -59,7 +61,7 @@ sealed class SoundType(
     )
 
     data object Silence : SoundType(
-        displayName = "Silence",
+        nameRes = R.string.sound_type_silence,
         label = "Silence",
         priority = Priority.LOW,
         color = 0xFF9E9E9E,
@@ -72,12 +74,14 @@ sealed class SoundType(
         color = 0xFF9E9E9E,
         label = yamnetClassName,
         priority = Priority.LOW,
-        displayName = yamnetClassName
+        nameRes = 0, // Not used for Generic
+    ) {
+        val displayName: String = yamnetClassName
             .replace("_", " ")
             .split(" ")
             .joinToString(" ")
-            { it.replaceFirstChar { c -> c.uppercase() } },
-    )
+            { it.replaceFirstChar { c -> c.uppercase() } }
+    }
 
     companion object {
         fun fromLabel(label: String): SoundType {
