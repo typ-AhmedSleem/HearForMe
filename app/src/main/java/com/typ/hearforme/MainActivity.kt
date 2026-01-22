@@ -1,7 +1,6 @@
 package com.typ.hearforme
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -19,7 +18,6 @@ import com.typ.hearforme.di.appModule
 import com.typ.hearforme.presentation.main.MainViewModel
 import com.typ.hearforme.presentation.navigation.MainNavigation
 import com.typ.hearforme.presentation.preview.PreviewContainer
-import com.typ.hearforme.service.SoundDetectionService
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {
@@ -63,11 +61,13 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startDetectionService() {
-        startService(Intent(this, SoundDetectionService::class.java))
+        viewModel.startDetection()
+//        startService(Intent(this, SoundDetectionService::class.java))
     }
 
     private fun stopDetectionService() {
-        stopService(Intent(this, SoundDetectionService::class.java))
+        viewModel.stopDetection()
+//        stopService(Intent(this, SoundDetectionService::class.java))
     }
 }
 
