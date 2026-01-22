@@ -1,5 +1,6 @@
 package com.typ.hearforme.presentation.history
 
+import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,9 +35,6 @@ import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.presentation.dashboard.DashboardViewModel
 import com.typ.hearforme.presentation.dashboard.SoundHistoryItem
 import org.koin.compose.viewmodel.koinViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -108,6 +106,10 @@ fun HistoryScreen(
 }
 
 fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("EEEE, MMM d", Locale.getDefault())
-    return sdf.format(Date(timestamp))
+    return DateUtils.getRelativeTimeSpanString(
+        timestamp,
+        System.currentTimeMillis(),
+        DateUtils.DAY_IN_MILLIS,
+        DateUtils.FORMAT_SHOW_DATE or DateUtils.FORMAT_SHOW_WEEKDAY
+    ).toString()
 }
