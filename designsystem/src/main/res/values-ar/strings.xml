@@ -77,6 +77,21 @@
     <string name="sound_type_someone_speaking">شخص يتحدث</string>
     <string name="sound_type_dog_barking">نباح كلب</string>
     <string name="sound_type_microwave_done">انتهاء الميكروويف</string>
+    <string name="sound_type_water_running">جريان المياه</string>
+    <string name="sound_type_glass_shattering">تحطم الزجاج</string>
+    <string name="sound_type_door_knocking">طرق على الباب</string>
+    <string name="sound_type_cat_meowing">مواء قطة</string>
+    <string name="sound_type_vehicle_horn">بوق السيارة</string>
+    <string name="sound_type_telephone_ringing">رنين الهاتف</string>
+    <string name="sound_type_thunder">رعد</string>
+    <string name="sound_type_explosion">انفجار</string>
+    <string name="sound_type_screaming">صراخ</string>
+    <string name="sound_type_car_alarm">إنذار سيارة</string>
+    <string name="sound_type_laughter">ضحك</string>
+    <string name="sound_type_power_tool">أداة كهربائية</string>
+    <string name="sound_type_bird_chirping">تغريد عصافير</string>
+    <string name="sound_type_music">موسيقى</string>
+    <string name="sound_type_wind">رياح</string>
     <string name="sound_type_silence">هدوء</string>
 
     <!-- Errors -->

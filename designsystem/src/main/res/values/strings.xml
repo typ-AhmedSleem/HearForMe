@@ -75,6 +75,21 @@
     <string name="sound_type_someone_speaking">Someone Speaking</string>
     <string name="sound_type_dog_barking">Dog Barking</string>
     <string name="sound_type_microwave_done">Microwave Done</string>
+    <string name="sound_type_water_running">Water Running</string>
+    <string name="sound_type_glass_shattering">Glass Shattering</string>
+    <string name="sound_type_door_knocking">Door Knocking</string>
+    <string name="sound_type_cat_meowing">Cat Meowing</string>
+    <string name="sound_type_vehicle_horn">Vehicle Horn</string>
+    <string name="sound_type_telephone_ringing">Telephone Ringing</string>
+    <string name="sound_type_thunder">Thunder</string>
+    <string name="sound_type_explosion">Explosion</string>
+    <string name="sound_type_screaming">Screaming</string>
+    <string name="sound_type_car_alarm">Car Alarm</string>
+    <string name="sound_type_laughter">Laughter</string>
+    <string name="sound_type_power_tool">Power Tool</string>
+    <string name="sound_type_bird_chirping">Bird Chirping</string>
+    <string name="sound_type_music">Music</string>
+    <string name="sound_type_wind">Wind</string>
     <string name="sound_type_silence">Silence</string>
 
     <!-- Errors -->
