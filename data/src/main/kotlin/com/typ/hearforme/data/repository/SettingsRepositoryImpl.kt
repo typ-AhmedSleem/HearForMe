@@ -32,7 +32,7 @@ class SettingsRepositoryImpl(private val context: Context) : SettingsRepository 
 
     override fun getSensitivity(type: SoundType): Flow<Float> {
         val key = floatPreferencesKey("sound_sensitivity_${type::class.simpleName}")
-        return context.dataStore.data.map { it[key] ?: 0.5f }
+        return context.dataStore.data.map { it[key] ?: 0.75f }
     }
 
     override val isFlashlightEnabled: Flow<Boolean> = context.dataStore.data
