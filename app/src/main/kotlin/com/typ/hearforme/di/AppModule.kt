@@ -48,7 +48,7 @@ val appModule = module {
     single<HistoryRepository> { HistoryRepositoryImpl(get()) }
 
     // AI
-    single<DetectionPolicy> { DebouncedDetectionPolicy() }
+    single<DetectionPolicy> { DebouncedDetectionPolicy(get()) }
     single<AudioClassifier> { MediaPipeAudioClassifier(androidContext()) }
 
     // Communication
