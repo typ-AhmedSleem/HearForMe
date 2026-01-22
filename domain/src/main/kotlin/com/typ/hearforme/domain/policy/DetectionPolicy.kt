@@ -38,7 +38,7 @@ class DefaultDetectionPolicy(private val settingsRepository: SettingsRepository)
 
 class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepository) : DetectionPolicy {
 
-    private val cooldownMs = 2000L
+    private val cooldownMs = 1000L
     private var lastObservedLabel: String? = null
     private var observationCount = 0
 
