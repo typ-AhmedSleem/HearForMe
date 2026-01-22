@@ -14,6 +14,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
@@ -54,7 +56,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -68,6 +69,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastCoerceAtLeast
+import androidx.compose.ui.util.fastCoerceIn
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.typ.hearforme.designsystem.R
@@ -77,6 +80,9 @@ import com.typ.hearforme.designsystem.theme.TextSecondary
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import org.koin.compose.viewmodel.koinViewModel
+import org.ocpsoft.prettytime.PrettyTime
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun DashboardScreen(
@@ -295,22 +301,15 @@ fun SoundVisualizer(
     rms: Float,
     onClick: () -> Unit,
 ) {
-    val soundIdentified by remember {
-        derivedStateOf {
-            state is DashboardUiState.Identified
-        }
-    }
     val primaryColor = if (state is DashboardUiState.Identified) {
         Color(state.event.type.color)
     } else MaterialTheme.colorScheme.primary
 
     val pulseScale by animateFloatAsState(
-        targetValue = if (soundIdentified) {
-            5f
-        } else if (state is DashboardUiState.ServiceOffline || state is DashboardUiState.MicAccessRequired) {
-            0.001f
-        } else {
-            1f + (rms * 10f).coerceAtMost(1f)
+        targetValue = when (state) {
+            is DashboardUiState.Identified -> 1.6f
+            is DashboardUiState.ServiceOffline, is DashboardUiState.MicAccessRequired -> 0.001f
+            else -> (rms * 10f).fastCoerceIn(1f, 1.5f)
         },
         animationSpec = spring(
             dampingRatio = Spring.DampingRatioHighBouncy,
@@ -324,22 +323,21 @@ fun SoundVisualizer(
             modifier = Modifier
                 .size(280.dp)
                 .drawBehind {
-                    val radius = (size.minDimension / 2.25f) * pulseScale
+                    val radius = (size.minDimension / 2.5f) * pulseScale
+                    val endingRadius = (radius * 1.25f).fastCoerceAtLeast(radius)
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                primaryColor.copy(alpha = 0.7f * pulseScale),
-                                primaryColor.copy(alpha = 0.6f * pulseScale),
-                                primaryColor.copy(alpha = 0.5f * pulseScale),
-                                primaryColor.copy(alpha = 0.4f * pulseScale),
-                                primaryColor.copy(alpha = 0.3f * pulseScale),
-                                primaryColor.copy(alpha = 0.2f * pulseScale),
+                                primaryColor.copy(alpha = 0.6f),
+                                primaryColor.copy(alpha = 0.4f),
+                                primaryColor.copy(alpha = 0.2f),
+                                primaryColor.copy(alpha = 0.1f),
                                 Color.Transparent,
                             ),
                             center = center,
-                            radius = radius * 1.15f
+                            radius = endingRadius
                         ),
-                        radius = radius * 1.15f,
+                        radius = endingRadius,
                         center = center
                     )
                 }
@@ -359,7 +357,7 @@ fun SoundVisualizer(
                 Box(contentAlignment = Alignment.Center) {
                     AnimatedContent(
                         targetState = state,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
+                        transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
                         label = "VisualizerContent"
                     ) { targetState ->
                         when (targetState) {
@@ -420,7 +418,13 @@ fun SoundVisualizer(
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
-                        Text(stringResource(R.string.dashboard_tap_to_see), color = TextSecondary, fontSize = 14.sp)
+                        if (event.type is SoundType.SomeoneSpeaking) {
+                            Text(
+                                stringResource(R.string.dashboard_tap_to_see),
+                                color = TextSecondary,
+                                fontSize = 14.sp
+                            )
+                        }
                     }
                 }
             }
@@ -484,7 +488,14 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
                 Text(stringResource(R.string.dashboard_confidence, (event.confidence * 100).toInt()), color = TextSecondary, fontSize = 14.sp)
             }
 
-            Text(stringResource(R.string.time_now), color = TextSecondary, fontSize = 14.sp)
+            val prettyTime = remember { PrettyTime(Locale.getDefault()) }
+            val relativeTime = remember(event.timestamp) { prettyTime.format(Date(event.timestamp)) }
+
+            Text(
+                text = relativeTime,
+                color = TextSecondary,
+                fontSize = 12.sp
+            )
         }
     }
 }
