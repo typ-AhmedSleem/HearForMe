@@ -46,4 +46,5 @@ dependencies {
 
     implementation(libs.androidx.navigation.compose)
     implementation(libs.bundles.koin)
+    implementation(libs.prettytime)
 }
