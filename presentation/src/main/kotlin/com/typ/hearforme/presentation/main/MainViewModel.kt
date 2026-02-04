@@ -8,7 +8,6 @@ import com.typ.hearforme.domain.policy.DetectionPolicy
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -35,7 +34,7 @@ class MainViewModel(
 
     fun startDetection() {
         viewModelScope.launch {
-            if (classifier.isRunning.lastOrNull() == true) return@launch
+//            if (classifier.isRunning.lastOrNull() == true) return@launch
             classifier.start()
             classifier.events.collect { event ->
                 if (policy.shouldAlert(event, lastAlertTime)) {
