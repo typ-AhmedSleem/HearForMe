@@ -12,15 +12,15 @@ import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import java.util.concurrent.ScheduledThreadPoolExecutor
-import java.util.concurrent.TimeUnit
-import kotlin.math.sqrt
 import com.typ.hearforme.domain.classifier.AudioClassifier as DomainAudioClassifier
 
 class MediaPipeAudioClassifier(
@@ -33,7 +33,7 @@ class MediaPipeAudioClassifier(
 
     private var classifier: AudioClassifier? = null
     private var audioRecord: AudioRecord? = null
-    private val executor = ScheduledThreadPoolExecutor(1)
+    private var pollingJob: Job? = null
 
     var lastLabel = ""
     private val _events = MutableSharedFlow<SoundEvent>(
@@ -56,7 +56,7 @@ class MediaPipeAudioClassifier(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun start() {
-        if (classifier != null) return
+        if (_isRunning.value) return
         _isRunning.value = true
         Log.d("HearForMe", "Starting classifier")
 
@@ -81,60 +81,41 @@ class MediaPipeAudioClassifier(
 
             // Start polling
             startPolling()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             e.printStackTrace()
+            _isRunning.value = false
+            Log.e("HearForMe", "Error with classifier. Reason: ${e.message}", e)
         }
     }
 
     private fun startPolling() {
-        Log.d("HearForMe", "Starting polling")
-        audioRecord?.startRecording() ?: return
-        Log.d("HearForMe", "Recording started")
-
-        val audioClassifier = classifier ?: return
-        Log.d("HearForMe", "AudioClassifier created")
+        Log.d("HearForMe", "Starting polling (coroutines)")
         val record = audioRecord ?: return
-        Log.d("HearForMe", "AudioRecord created")
+        val audioClassifier = classifier ?: return
 
-        // Create TensorAudio manually
-        // YAMNet input is ~15600 samples (0.975s)
-        AudioFormat.Builder()
-            .setSampleRate(AudioClassifierConstants.SAMPLING_RATE_IN_HZ)
-            .build()
-        Log.d("HearForMe", "AudioFormat created")
+        record.startRecording()
+
         val tensorAudio = AudioData.create(
-            AudioData
-                .AudioDataFormat
-                .builder()
+            AudioData.AudioDataFormat.builder()
                 .setNumOfChannels(1)
                 .setSampleRate(AudioClassifierConstants.SAMPLING_RATE_IN_HZ.toFloat())
                 .build(),
             15600
         )
-        Log.d("HearForMe", "TensorAudio created")
 
-        executor.scheduleWithFixedDelay(
-            {
-                tensorAudio.load(record)
-
-                // Calculate RMS for visualizer
-                val buffer = tensorAudio.buffer
-                var sum = 0.0
-                val limit = 15600 // YAMNet buffer size
-                for (i in 0 until limit) {
-                    val sample = buffer[i]
-                    sum += (sample.toDouble() * sample.toDouble())
+        pollingJob = scope.launch {
+            while (isActive && _isRunning.value) {
+                try {
+                    tensorAudio.load(record)
+                    val results = audioClassifier.classify(tensorAudio)
+                    processResults(results)
+                } catch (t: Throwable) {
+                    Log.e("HearForMe", "Polling error", t)
+                    break
                 }
-                val rmsValue = sqrt(sum / limit.toDouble()).toFloat()
-                scope.launch { _rms.emit(rmsValue) }
-
-                val results: AudioClassifierResult = audioClassifier.classify(tensorAudio)
-                processResults(results)
-            },
-            0,
-            100, // Faster polling for smoother visualizer
-            TimeUnit.MILLISECONDS
-        )
+                delay(100)
+            }
+        }
     }
 
     private fun processResults(results: AudioClassifierResult) {
@@ -169,11 +150,23 @@ class MediaPipeAudioClassifier(
     }
 
     override fun stop() {
+        if (!_isRunning.value) return
         _isRunning.value = false
-        executor.shutdown()
-        audioRecord?.stop()
-        classifier?.close()
-        classifier = null
+
+        pollingJob?.cancel()
+        pollingJob = null
+
+        try {
+            audioRecord?.stop()
+        } catch (_: Throwable) {
+        }
+
+        try {
+            classifier?.close()
+        } catch (_: Throwable) {
+        }
+
         audioRecord = null
+        classifier = null
     }
 }
