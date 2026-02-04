@@ -312,7 +312,7 @@ fun SoundVisualizer(
             else -> (rms * 10f).fastCoerceIn(1f, 1.5f)
         },
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioHighBouncy,
+//            dampingRatio = Spring.DampingRatioHighBouncy,
             stiffness = Spring.StiffnessMediumLow,
         ),
         label = "Pulse"
