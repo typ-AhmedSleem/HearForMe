@@ -1,5 +1,6 @@
 package com.typ.hearforme.presentation.settings
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.typ.hearforme.domain.model.SoundType
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@Immutable
 data class SoundSetting(
     val type: SoundType,
     val isEnabled: Boolean,
