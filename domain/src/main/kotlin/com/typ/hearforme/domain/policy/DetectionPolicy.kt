@@ -38,7 +38,7 @@ class DefaultDetectionPolicy(private val settingsRepository: SettingsRepository)
 
 class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepository) : DetectionPolicy {
 
-    private val cooldownMs = 1000L
+    private val cooldownMs = 500L
     private var lastObservedLabel: String? = null
     private var observationCount = 0
 
@@ -47,11 +47,11 @@ class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepositor
         if (!isEnabled) return false
 
         val sensitivity = settingsRepository.getSensitivity(event.type).first()
-        val threshold = 0.8f - (sensitivity * 0.5f)
+        //        val threshold = 0.8f - (sensitivity * 0.5f)
 
         // 1. Confidence check
-        if (event.confidence < threshold) {
-            reset()
+        if (event.confidence < sensitivity) {
+//            reset()
             return false
         }
 
