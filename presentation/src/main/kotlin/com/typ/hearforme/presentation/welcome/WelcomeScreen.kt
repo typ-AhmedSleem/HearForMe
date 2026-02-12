@@ -26,16 +26,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.typ.hearforme.designsystem.R
+import com.typ.hearforme.designsystem.theme.HearForMeTheme
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.PrimaryGradient
 
@@ -56,16 +58,6 @@ fun WelcomeScreen(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 24.dp)
         ) {
-            // Placeholder for logo icon
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(PrimaryBlue, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("👂", fontSize = 20.sp)
-            }
-            Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineSmall,
@@ -167,19 +159,22 @@ fun WelcomeGraphics() {
                 contentAlignment = Alignment.Center
             ) {
                 // Here we would place an image. Using a placeholder for now.
-                Text("🌊", fontSize = 60.sp)
+                Text("👂", fontSize = 60.sp)
             }
         }
-
-        // Floating Labels (Simulation)
-        // Note: In a real app, these would be positioned relative to the center
-        // Using offsets for quick implementation
 
         Box(
             modifier = Modifier
                 .offset(x = (-80).dp, y = (-100).dp)
                 .background(Color.White, RoundedCornerShape(16.dp))
-                .shadow(2.dp, RoundedCornerShape(16.dp))
+                .dropShadow(
+                    shape = RoundedCornerShape(16.dp),
+                    shadow = androidx.compose.ui.graphics.shadow.Shadow(
+                        color = MaterialTheme.colorScheme.primary,
+                        radius = 2.dp,
+                        alpha = 0.15f,
+                    )
+                )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -195,9 +190,16 @@ fun WelcomeGraphics() {
 
         Box(
             modifier = Modifier
-                .offset(x = (80).dp, y = (60).dp)
+                .offset(x = (80).dp, y = (100).dp)
                 .background(Color.White, RoundedCornerShape(16.dp))
-                .shadow(2.dp, RoundedCornerShape(16.dp))
+                .dropShadow(
+                    shape = RoundedCornerShape(16.dp),
+                    shadow = androidx.compose.ui.graphics.shadow.Shadow(
+                        color = MaterialTheme.colorScheme.primary,
+                        radius = 2.dp,
+                        alpha = 0.15f,
+                    )
+                )
                 .padding(horizontal = 12.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -211,5 +213,13 @@ fun WelcomeGraphics() {
                 )
             }
         }
+    }
+}
+
+@Preview(locale = "ar")
+@Composable
+private fun WelcomeScreenPreview() {
+    HearForMeTheme {
+        WelcomeScreen { }
     }
 }
