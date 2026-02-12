@@ -20,7 +20,7 @@
     <string name="onboarding_title_final">أنت مستعد تماماً!</string>
     <string name="onboarding_desc_final">ابدأ في رؤية العالم من خلال عينيك ولمسك.</string>
     <string name="welcome_tagline">شاهد الأصوات\nمن حولك</string>
-    <string name="welcome_desc">هاتفك يستمع للإنذارات، الأصوات، وصفارات الإنذار، وينبهك فوراً.</string>
+    <string name="welcome_desc">هاتفك يستمع للالأصوات، وصفارات الإنذار، وينبهك فوراً.</string>
     <string name="welcome_feature_visual">تنبيه\nبصري</string>
     <string name="welcome_feature_haptics">شعور\nلمسي</string>
 
