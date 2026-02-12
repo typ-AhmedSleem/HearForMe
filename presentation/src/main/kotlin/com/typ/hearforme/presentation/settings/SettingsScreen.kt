@@ -34,12 +34,16 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.fastRoundToInt
 import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.domain.model.SoundType
@@ -226,18 +230,33 @@ fun SoundSettingItem(
 
             AnimatedVisibility(setting.isEnabled) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(
+                        alignment = Alignment.CenterHorizontally,
+                        space = 8.dp
+                    )
+                ) {
+                    var sensitivity by remember {
+                        mutableFloatStateOf(setting.sensitivity)
+                    }
                     Text(
                         stringResource(R.string.settings_sensitivity),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.width(16.dp))
                     Slider(
-                        value = setting.sensitivity,
-                        onValueChange = onSensitivityChange,
+                        value = sensitivity,
+                        onValueChange = { sensitivity = it },
                         modifier = Modifier.weight(1f),
+                        onValueChangeFinished = { onSensitivityChange(sensitivity) },
                         colors = SliderDefaults.colors(thumbColor = PrimaryBlue, activeTrackColor = PrimaryBlue)
+                    )
+                    Text(
+                        text = "${(sensitivity * 100).fastRoundToInt()}%",
+                        color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
                     )
                 }
             }
