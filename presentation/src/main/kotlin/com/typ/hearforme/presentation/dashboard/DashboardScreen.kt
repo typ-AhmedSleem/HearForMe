@@ -405,7 +405,13 @@ fun SoundVisualizer(
                         Spacer(modifier = Modifier.height(16.dp))
                         StatusBadge(
                             color = Color(event.type.color),
-                            text = stringResource(R.string.dashboard_confidence_percentage, (event.confidence * 100).toInt())
+                            text = stringResource(
+                                R.string.dashboard_confidence_percentage,
+                                event.confidence
+                                    .fastCoerceIn(0f, 0.95f)
+                                    .times(100)
+                                    .toInt()
+                            )
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
