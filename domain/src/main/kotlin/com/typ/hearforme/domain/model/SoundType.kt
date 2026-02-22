@@ -14,7 +14,7 @@ abstract class SoundType(
     // Explicit high-priority types for deaf safety
     data object BabyCrying : SoundType(
         nameRes = R.string.sound_type_baby_crying,
-        label = "cry",
+        label = "BABY_CRY",
         priority = Priority.HIGH,
         color = 0xFFE91E63,
         emoji = "👶"
@@ -22,7 +22,7 @@ abstract class SoundType(
 
     data object Doorbell : SoundType(
         nameRes = R.string.sound_type_doorbell,
-        label = "bell",
+        label = "DOORBELL",
         priority = Priority.HIGH,
         color = 0xFFFF9800,
         emoji = "🔔"
@@ -30,7 +30,7 @@ abstract class SoundType(
 
     data object AlarmSiren : SoundType(
         nameRes = R.string.sound_type_siren,
-        label = "siren",
+        label = "SIREN",
         priority = Priority.CRITICAL,
         color = 0xFFF44336,
         emoji = "🚨"
@@ -46,7 +46,7 @@ abstract class SoundType(
 
     data object SomeoneSpeaking : SoundType(
         nameRes = R.string.sound_type_someone_speaking,
-        label = "speech",
+        label = "SPEECH",
         priority = Priority.LOW,
         color = 0xFF4CAF50,
         emoji = "🗣️"
@@ -62,7 +62,7 @@ abstract class SoundType(
 
     data object DogBarking : SoundType(
         nameRes = R.string.sound_type_dog_barking,
-        label = "dog",
+        label = "DOG",
         priority = Priority.HIGH,
         color = 0xFF795548,
         emoji = "🐕"
@@ -78,7 +78,7 @@ abstract class SoundType(
 
     data object CatMeowing : SoundType(
         nameRes = R.string.sound_type_cat_meowing,
-        label = "cat",
+        label = "CAT",
         priority = Priority.NORMAL,
         color = 0xFFFFC107,
         emoji = "🐈"
@@ -86,7 +86,7 @@ abstract class SoundType(
 
     data object MicrowaveDone : SoundType(
         nameRes = R.string.sound_type_microwave_done,
-        label = "microwave",
+        label = "ALARM",
         priority = Priority.NORMAL,
         color = 0xFF2196F3,
         emoji = "⏲️"
@@ -142,7 +142,7 @@ abstract class SoundType(
 
     data object TelephoneRinging : SoundType(
         nameRes = R.string.sound_type_telephone_ringing,
-        label = "telephone",
+        label = "TELEPHONE",
         priority = Priority.NORMAL,
         color = 0xFF3F51B5,
         emoji = "📞"
