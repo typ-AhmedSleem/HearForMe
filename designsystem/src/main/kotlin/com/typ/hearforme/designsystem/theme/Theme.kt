@@ -3,6 +3,7 @@ package com.typ.hearforme.designsystem.theme
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -25,22 +26,34 @@ private val LightColorScheme = lightColorScheme(
     onSurface = OnSurface,
 )
 
-// We focus on Light Theme first as per designs, but can add dark theme later.
+private val DarkColorScheme = darkColorScheme(
+    primary = PrimaryLight,
+    onPrimary = BackgroundDark,
+    primaryContainer = PrimaryDark,
+    onPrimaryContainer = PrimaryLight,
+    secondary = AlertInfo,
+    onSecondary = BackgroundDark,
+    tertiary = AlertNormal,
+    error = AlertCritical,
+    background = BackgroundDark,
+    surface = SurfaceDark,
+    onBackground = OnBackgroundDark,
+    onSurface = OnSurfaceDark,
+)
 
 @Composable
 fun HearForMeTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
-    val colorScheme = LightColorScheme // Always light for now to match designs
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }
 

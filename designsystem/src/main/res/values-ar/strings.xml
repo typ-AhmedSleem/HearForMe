@@ -27,7 +27,16 @@
     <!-- Communication Screen -->
     <string name="communication_title">النسخ المباشر</string>
     <string name="communication_hint">اضغط على الميكروفون وابدأ التحدث باللغة العربية…</string>
-    <string name="communication_listening">جاري الاستماع…</string>
+    <string name="communication_listening">جاري الاستماع</string>
+    <string name="mic_ready">الميكروفون جاهز</string>
+    <string name="mic_busy">الميكروفون مشغول</string>
+    <string name="network_issue">مشكلة في الشبكة</string>
+    <string name="audio_conflict">تعارض في الصوت</string>
+    <string name="connection_lost">فقد الاتصال. توقف النسخ مؤقتاً.</string>
+    <string name="mic_in_use">الميكروفون مستخدم من تطبيق آخر</string>
+    <string name="tap_to_start">اضغط للبدء</string>
+    <string name="tap_to_stop">اضغط للإيقاف</string>
+    <string name="retry_connection">اتصل بالإنترنت</string>
 
     <!-- Dashboard Screen -->
     <string name="dashboard_most_recent">الأحدث</string>

@@ -34,11 +34,13 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
                 _error.value = null
             }
 
-            override fun onBeginningOfSpeech() {}
+            override fun onBeginningOfSpeech() {
+//                _isListening.value = true
+            }
             override fun onRmsChanged(rmsdB: Float) {}
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {
-                _isListening.value = false
+//                _isListening.value = false
             }
 
             override fun onError(error: Int) {
@@ -51,6 +53,7 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
                 if (!matches.isNullOrEmpty()) {
                     _results.value = matches[0]
                 }
+                _isListening.value = false
             }
 
             override fun onPartialResults(partialResults: Bundle?) {
