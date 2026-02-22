@@ -14,12 +14,18 @@ val AlertCritical = Color(0xFFE63946)  // Red (Siren)
 val AlertInfo = Color(0xFF48CAE4)      // Cyan (Running Water)
 val AlertWarning = Color(0xFFFFD166)   // Yellow (Dog Bark)
 
-// Neutral Colors
+// Neutral Colors - Light
 val BackgroundLight = Color(0xFFF8F9FF)
 val SurfaceLight = Color(0xFFFFFFFF)
 val OnBackground = Color(0xFF0D1B2A)
 val OnSurface = Color(0xFF1B263B)
 val TextSecondary = Color(0xFF778DA9)
+
+// Neutral Colors - Dark
+val BackgroundDark = Color(0xFF0B141E)
+val SurfaceDark = Color(0xFF15222E)
+val OnBackgroundDark = Color(0xFFF1F4F9)
+val OnSurfaceDark = Color(0xFFFFFFFF)
 
 // Gradients
 val PrimaryGradient = listOf(PrimaryBlue, Color(0xFF70D6FF))
