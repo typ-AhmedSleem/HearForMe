@@ -40,14 +40,17 @@ class AlertManagerImpl(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onSoundDetected(event: SoundEvent) {
+        val activeAlertLabel = _activeAlert.value?.type?.label ?: ""
+
         // Handle Silence: Reset UI state to identifying
         if (event.type is SoundType.Silence) {
+            if (activeAlertLabel == "") return
             _activeAlert.value = null
             Log.d("HearForMe", "Silence detected, resetting UI.")
             return
         }
 
-        val activeAlertLabel = _activeAlert.value?.type?.label ?: ""
+        // * Check if already showing alert for same event
         if (event.type.label.equals(activeAlertLabel, true)) return
 
         // * Set as active alert
