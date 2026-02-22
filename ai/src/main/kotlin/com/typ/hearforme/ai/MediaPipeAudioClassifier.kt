@@ -8,6 +8,7 @@ import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifier
 import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifierResult
 import com.google.mediapipe.tasks.components.containers.AudioData
 import com.google.mediapipe.tasks.core.BaseOptions
+import com.typ.hearforme.ai.engine.SoundDecisionEngine
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,12 @@ class MediaPipeAudioClassifier(
     private val modelPath: String = "yamnet.tflite",
     private val threshold: Float = 0.3f,
 ) : DomainAudioClassifier {
+
+    private val engine = SoundDecisionEngine(
+        windowSize = 5,
+        startThreshold = 0.6f,
+        stopThreshold = 0.3f
+    )
 
     private val textUnknownSound = context.getString(R.string.unknown_sound)
 
@@ -124,21 +131,39 @@ class MediaPipeAudioClassifier(
 
         val classifications = classificationResults.first().classifications()
 
-        val topResult = classifications.map {
-            it.categories().maxByOrNull { category -> category.score() }
-        }.firstOrNull()
+        // Prepare raw results for the engine (label -> score)
+        val rawResults = mutableMapOf<String, Float>()
+        classifications.forEach { classification ->
+            classification.categories().forEach { category ->
+                rawResults[category.categoryName()] = category.score()
+            }
+        }
 
-        val topResultScore = topResult?.score() ?: 0f
-        val topResultLabel = topResult?.categoryName() ?: textUnknownSound
-        if (lastLabel != topResultLabel) {
-//            lastLabel = topResultLabel
-            Log.d("HearForMe", "Top result: $topResultLabel ($topResultScore)")
-            if (topResultScore > threshold) {
-                val soundType = SoundType.fromLabel(topResultLabel)
+        // --- PRODUCTION-SAFE SOUND DECISION ENGINE (Deterministic Smoothing & Hysteresis) ---
+        val engineEvents = engine.processFrame(rawResults)
+        val activeEvents = engineEvents.filter { it.isActive }
+
+        if (activeEvents.isEmpty()) {
+            // Signal Silence/Reset state
+            scope.launch {
+                _events.emit(
+                    SoundEvent(
+                        type = SoundType.Silence,
+                        confidence = 1.0f,
+                        timestamp = System.currentTimeMillis()
+                    )
+                )
+            }
+        } else {
+            // Emit all active sound events
+            activeEvents.forEach { engineEvent ->
+                Log.d("HearForMe", "Engine Event: ${engineEvent.group} (${engineEvent.confidence})")
+
+                val soundType = SoundType.fromLabel(engineEvent.group)
                 if (soundType !is SoundType.Generic) {
                     val event = SoundEvent(
                         type = soundType,
-                        confidence = topResultScore,
+                        confidence = engineEvent.confidence,
                         timestamp = System.currentTimeMillis(),
                     )
                     scope.launch {
