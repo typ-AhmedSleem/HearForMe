@@ -1,6 +1,7 @@
 package com.typ.hearforme.domain.policy
 
 import com.typ.hearforme.domain.model.SoundEvent
+import com.typ.hearforme.domain.model.SoundType
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.flow.first
 
@@ -38,8 +39,9 @@ class DefaultDetectionPolicy(private val settingsRepository: SettingsRepository)
 
 class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepository) : DetectionPolicy {
 
-    private val cooldownMs = 500L
+    private val cooldownMs = 250L
     private var lastObservedLabel: String? = null
+    private var lastReportedLabel: String? = null
     private var observationCount = 0
 
     override suspend fun shouldAlert(event: SoundEvent, lastAlertTime: Long?): Boolean {
@@ -64,14 +66,28 @@ class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepositor
         // 3. Debounce logic: check if same as last observed
         val currentLabel = event.type.label
         if (currentLabel == lastObservedLabel) {
-            observationCount++
+            if (lastReportedLabel != currentLabel) {
+                observationCount++
+            }
         } else {
             lastObservedLabel = currentLabel
             observationCount = 1
         }
 
-        // 4. Require 2 consecutive observations
-        return if (observationCount >= 2) {
+        // 3.1 Require 5 consecutive observations (only for silence)
+        if (currentLabel == SoundType.Silence.label) {
+            return if (observationCount >= 5 && lastReportedLabel != currentLabel) {
+                lastReportedLabel = currentLabel
+                reset() // Reset after alert to require another 5 for next one (or rely on cooldown)
+                return true
+            } else {
+                false
+            }
+        }
+
+        // 4. Require 2 consecutive observations (for all labels except silence)
+        return if (observationCount >= 1) {
+            lastReportedLabel = currentLabel
             reset() // Reset after alert to require another 2 for next one (or rely on cooldown)
             true
         } else {
