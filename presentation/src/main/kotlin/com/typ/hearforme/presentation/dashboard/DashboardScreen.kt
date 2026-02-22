@@ -150,7 +150,6 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPaddings)
-                .padding(horizontal = 20.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -183,7 +182,11 @@ fun DashboardScreen(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -319,12 +322,12 @@ fun SoundVisualizer(
     )
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
+        Surface(
             modifier = Modifier
-                .size(280.dp)
+                .size(220.dp)
                 .drawBehind {
-                    val radius = (size.minDimension / 2.5f) * pulseScale
-                    val endingRadius = (radius * 1.25f).fastCoerceAtLeast(radius)
+                    val radius = (size.minDimension / 2f) * pulseScale
+                    val endingRadius = (radius * 1.5f).fastCoerceAtLeast(radius)
                     drawCircle(
                         brush = Brush.radialGradient(
                             colors = listOf(
@@ -346,26 +349,20 @@ fun SoundVisualizer(
                     indication = null,
                     onClick = onClick
                 ),
-            contentAlignment = Alignment.Center
+            shape = CircleShape,
+            shadowElevation = 8.dp
         ) {
-            Surface(
-                modifier = Modifier.size(220.dp),
-                shape = CircleShape,
-                color = Color.White,
-                shadowElevation = 8.dp
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    AnimatedContent(
-                        targetState = state,
-                        transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
-                        label = "VisualizerContent"
-                    ) { targetState ->
-                        when (targetState) {
-                            DashboardUiState.MicAccessRequired -> Text("🎤", fontSize = 80.sp, color = Color.LightGray)
-                            DashboardUiState.ServiceOffline -> Text("💤", fontSize = 80.sp, color = Color.LightGray)
-                            DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
-                            is DashboardUiState.Identified -> Text(targetState.event.type.emoji, fontSize = 80.sp)
-                        }
+            Box(contentAlignment = Alignment.Center) {
+                AnimatedContent(
+                    targetState = state,
+                    transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
+                    label = "VisualizerContent"
+                ) { targetState ->
+                    when (targetState) {
+                        DashboardUiState.MicAccessRequired -> Text("🎤", fontSize = 80.sp, color = Color.LightGray)
+                        DashboardUiState.ServiceOffline -> Text("💤", fontSize = 80.sp, color = Color.LightGray)
+                        DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
+                        is DashboardUiState.Identified -> Text(targetState.event.type.emoji, fontSize = 80.sp)
                     }
                 }
             }
@@ -461,7 +458,6 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
             .fillMaxWidth()
             .animateItem(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
