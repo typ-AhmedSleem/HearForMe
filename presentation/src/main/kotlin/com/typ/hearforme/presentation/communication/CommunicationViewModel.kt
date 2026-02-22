@@ -26,13 +26,18 @@ class CommunicationViewModel(
     private val _uiState = MutableStateFlow(CommunicationUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val _engineState = MutableStateFlow<CommunicationEngineState>(CommunicationEngineState.Ready)
+    val engineState = _engineState.asStateFlow()
+
     init {
         observeEngines()
     }
 
     private fun observeEngines() {
         sttEngine.results.onEach { text ->
-            _uiState.update { it.copy(transcribedText = it.transcribedText + " " + text, partialTranscription = "") }
+            if (text.isNotBlank()) {
+                _uiState.update { it.copy(transcribedText = it.transcribedText + " " + text, partialTranscription = "") }
+            }
         }.launchIn(viewModelScope)
 
         sttEngine.partialResults.onEach { text ->
@@ -41,10 +46,33 @@ class CommunicationViewModel(
 
         sttEngine.isListening.onEach { listening ->
             _uiState.update { it.copy(isListening = listening) }
+            _engineState.update { currentState ->
+                if (listening) CommunicationEngineState.Listening
+                else if (currentState is CommunicationEngineState.Listening) CommunicationEngineState.Ready
+                else currentState
+            }
         }.launchIn(viewModelScope)
 
         sttEngine.error.onEach { error ->
             _uiState.update { it.copy(error = error) }
+            if (error != null) {
+                _engineState.value = when {
+                    error.contains("network", ignoreCase = true) || error.contains("connection", ignoreCase = true) ->
+                        CommunicationEngineState.Offline
+
+                    error.contains("busy", ignoreCase = true) || error.contains("conflict", ignoreCase = true) || error.contains(
+                        "audio",
+                        ignoreCase = true
+                    ) ->
+                        CommunicationEngineState.Busy
+
+                    else -> CommunicationEngineState.Ready
+                }
+            } else {
+                if (_engineState.value is CommunicationEngineState.Offline || _engineState.value is CommunicationEngineState.Busy) {
+                    _engineState.value = CommunicationEngineState.Ready
+                }
+            }
         }.launchIn(viewModelScope)
 
         ttsEngine.isSpeaking.onEach { speaking ->
@@ -58,6 +86,11 @@ class CommunicationViewModel(
 
     fun stopListening() {
         sttEngine.stopListening()
+    }
+
+    fun retry() {
+        _engineState.value = CommunicationEngineState.Ready
+        startListening()
     }
 
     fun speak(text: String) {
