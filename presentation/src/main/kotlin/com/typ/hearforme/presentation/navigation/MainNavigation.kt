@@ -1,9 +1,10 @@
 package com.typ.hearforme.presentation.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -52,16 +53,10 @@ fun MainNavigation(
             navController = navController,
             contentAlignment = Alignment.Center,
             enterTransition = {
-                fadeIn(tween(700)) + slideIntoContainer(
-                    animationSpec = tween(700),
-                    towards = SlideDirection.Start,
-                )
+                fadeIn(tween(100)) + slideInHorizontally()
             },
             exitTransition = {
-                fadeOut(tween(700)) + slideOutOfContainer(
-                    animationSpec = tween(700),
-                    towards = SlideDirection.Start,
-                )
+                fadeOut(tween(100)) + slideOutHorizontally()
             },
             startDestination = if (hasCompletedOnboarding) Screen.Dashboard.route else Screen.Welcome.route
         ) {
@@ -99,6 +94,7 @@ fun MainNavigation(
                         navController.navigate(Screen.History.route)
                     },
                     onNavigateToCommunication = {
+                        dashboardViewModel.disableDetection()
                         navController.navigate(Screen.Communication.route)
                     },
                     onSOSClick = {
