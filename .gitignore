@@ -16,7 +16,7 @@ build
 local.properties
 # /Planning
 .vscode
-.idea
+.idea/
 .kotlin
 /bin
 domain/bin
