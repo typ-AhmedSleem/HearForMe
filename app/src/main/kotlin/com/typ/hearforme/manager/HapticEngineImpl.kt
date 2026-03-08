@@ -4,11 +4,12 @@ import android.content.Context
 import android.os.Build
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
-import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
 import com.typ.hearforme.domain.manager.HapticEngine
+import com.typ.hearforme.domain.manager.HapticVibrationPattern
 import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.domain.utils.shouldMatchLengthOf
 
 class HapticEngineImpl(context: Context) : HapticEngine {
 
@@ -20,26 +21,41 @@ class HapticEngineImpl(context: Context) : HapticEngine {
         private const val AMP_OFF = 0
     }
 
-    private val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val vibratorManager =
-            context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        vibratorManager.defaultVibrator
-    } else {
-        @Suppress("DEPRECATION")
-        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    }
+    private val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+    private val vibrator = vibratorManager.defaultVibrator
+    private val hasVibrator = vibrator.hasVibrator()
 
     init {
-        Log.d(TAG, "Vibrator available: ${vibrator.hasVibrator()}")
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d(TAG, "Amplitude control: ${vibrator.hasAmplitudeControl()}")
-        }
+        Log.d(TAG, "Vibrator available: $hasVibrator")
+        Log.d(TAG, "Amplitude control: ${vibrator.hasAmplitudeControl()}")
     }
 
     override fun vibrateForPriority(priority: SoundType.Priority) {
-        if (!vibrator.hasVibrator()) return
+        if (!hasVibrator) return
 
-        val (timings, amplitudes) = when (priority) {
+        val pattern = when (priority) {
+            SoundType.Priority.LOW -> {
+                HapticVibrationPattern.LowPriority
+            }
+
+            SoundType.Priority.NORMAL -> {
+                HapticVibrationPattern.NormalPriority
+            }
+
+            SoundType.Priority.HIGH -> {
+                HapticVibrationPattern.HighPriority
+            }
+
+            SoundType.Priority.CRITICAL -> {
+                HapticVibrationPattern.CriticalPriority
+            }
+        }
+
+        repeat(pattern.repeatCount) {
+            vibratePattern(pattern)
+        }
+
+        /*val (timings, amplitudes) = when (priority) {
             // Intense staccato bursts followed by a sustained long vibration
             SoundType.Priority.CRITICAL -> longArrayOf(
                 0, 150, 50, 150, 50, 150, 50, 600
@@ -69,16 +85,17 @@ class HapticEngineImpl(context: Context) : HapticEngine {
             )
         }
 
-        vibrateWithAmplitudes(timings, amplitudes)
+        vibrateWithAmplitudes(timings, amplitudes)*/
     }
 
     override fun performInteractionFeedback() {
-        if (!vibrator.hasVibrator()) return
-        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK))
+        if (!hasVibrator) return
+        vibratePattern(HapticVibrationPattern.InteractionPriority)
+//        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK))
     }
 
     override fun vibrate(pattern: LongArray, repeat: Int) {
-        if (!vibrator.hasVibrator()) return
+        if (!hasVibrator) return
         // Build max-amplitude array for the simple pattern API
         val amplitudes = IntArray(pattern.size) { i ->
             if (i % 2 == 0) AMP_OFF else AMP_MAX
@@ -86,6 +103,20 @@ class HapticEngineImpl(context: Context) : HapticEngine {
         vibrateWithAmplitudes(pattern, amplitudes, repeat)
     }
 
+    override fun vibratePattern(pattern: HapticVibrationPattern) {
+        if (hasVibrator) {
+            VibrationEffect.createWaveform(
+                pattern.pattern,
+                pattern.amplitude shouldMatchLengthOf pattern.pattern,
+                pattern.repeatCount
+            ).also { vibrator.vibrate(it) }
+        }
+    }
+
+    @Deprecated(
+        message = "Will be replaced with vibratePattern",
+        level = DeprecationLevel.WARNING
+    )
     private fun vibrateWithAmplitudes(
         timings: LongArray,
         amplitudes: IntArray,
