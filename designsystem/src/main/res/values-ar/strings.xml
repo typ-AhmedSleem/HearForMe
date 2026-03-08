@@ -112,6 +112,16 @@
     <string name="isha">صلاة العشاء</string>
 
     <!-- Errors -->
+    <string name="error_audio">خطأ في تسجيل الصوت</string>
+    <string name="error_client">خطأ في جانب العميل</string>
+    <string name="error_insufficient_permissions">صلاحيات غير كافية</string>
+    <string name="error_network">خطأ في الشبكة</string>
+    <string name="error_network_timeout">انتهت مهلة الشبكة</string>
+    <string name="error_no_match">لم يتم العثور على تطابق</string>
+    <string name="error_recognizer_busy">خدمة التعرف مشغولة</string>
+    <string name="error_server">خطأ من الخادم</string>
+    <string name="error_speech_timeout">لا يوجد إدخال صوتي</string>
+    <string name="error_unknown">خطأ غير معروف: كود %1$d</string>
     <string name="error_speech_recognition">خطأ في التعرف على الكلام: %1$d</string>
     <string name="error_tts_failed">فشل تهيئة تحويل النص إلى كلام</string>
     <string name="error_tts_lang_not_supported">اللغة %1$s غير مدعومة</string>

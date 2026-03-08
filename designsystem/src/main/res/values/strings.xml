@@ -110,6 +110,16 @@
     <string name="isha">Isha</string>
 
     <!-- Errors -->
+    <string name="error_audio">Audio recording error</string>
+    <string name="error_client">Client side error</string>
+    <string name="error_insufficient_permissions">Insufficient permissions</string>
+    <string name="error_network">Network error</string>
+    <string name="error_network_timeout">Network timeout</string>
+    <string name="error_no_match">No match</string>
+    <string name="error_recognizer_busy">RecognitionService busy</string>
+    <string name="error_server">Error from server</string>
+    <string name="error_speech_timeout">No speech input</string>
+    <string name="error_unknown">Unknown error: code %1$d</string>
     <string name="error_speech_recognition">Speech recognition error: %1$d</string>
     <string name="error_tts_failed">Failed to initialize TTS</string>
     <string name="error_tts_lang_not_supported">Language %1$s not supported</string>
