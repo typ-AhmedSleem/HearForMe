@@ -9,6 +9,7 @@ import com.google.mediapipe.tasks.audio.audioclassifier.AudioClassifierResult
 import com.google.mediapipe.tasks.components.containers.AudioData
 import com.google.mediapipe.tasks.core.BaseOptions
 import com.typ.hearforme.ai.engine.SoundDecisionEngine
+import com.typ.hearforme.domain.interceptors.ClassifierInterceptor
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,7 @@ class MediaPipeAudioClassifier(
     private val context: Context,
     private val modelPath: String = "yamnet.tflite",
     private val threshold: Float = 0.3f,
+    private val interceptors: List<ClassifierInterceptor> = emptyList(),
 ) : DomainAudioClassifier {
 
     private val engine = SoundDecisionEngine(
@@ -146,13 +148,12 @@ class MediaPipeAudioClassifier(
         if (activeEvents.isEmpty()) {
             // Signal Silence/Reset state
             scope.launch {
-                _events.emit(
-                    SoundEvent(
-                        type = SoundType.Silence,
-                        confidence = 1.0f,
-                        timestamp = System.currentTimeMillis()
-                    )
+                val event = SoundEvent(
+                    type = SoundType.Silence,
+                    confidence = 1.0f,
+                    timestamp = System.currentTimeMillis()
                 )
+                emitIntercepted(event)
             }
         } else {
             // Emit all active sound events
@@ -167,11 +168,20 @@ class MediaPipeAudioClassifier(
                         timestamp = System.currentTimeMillis(),
                     )
                     scope.launch {
-                        _events.emit(event)
+                        emitIntercepted(event)
                     }
                 }
             }
         }
+    }
+
+    private suspend fun emitIntercepted(event: SoundEvent) {
+        var currentEvent: SoundEvent? = event
+        for (interceptor in interceptors) {
+            currentEvent = currentEvent?.let { interceptor.intercept(it) }
+            if (currentEvent == null) break
+        }
+        currentEvent?.let { _events.emit(it) }
     }
 
     override fun stop() {

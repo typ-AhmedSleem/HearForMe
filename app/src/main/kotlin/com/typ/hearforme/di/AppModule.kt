@@ -10,6 +10,7 @@ import com.typ.hearforme.data.repository.SettingsRepositoryImpl
 import com.typ.hearforme.domain.classifier.AudioClassifier
 import com.typ.hearforme.domain.communication.SpeechToTextEngine
 import com.typ.hearforme.domain.communication.TextToSpeechEngine
+import com.typ.hearforme.domain.interceptors.prays.PrayTimesInterceptor
 import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.manager.HapticEngine
 import com.typ.hearforme.domain.policy.DebouncedDetectionPolicy
@@ -49,8 +50,14 @@ val appModule = module {
     single<HistoryRepository> { HistoryRepositoryImpl(get()) }
 
     // AI
+    single { PrayTimesInterceptor() }
     single<DetectionPolicy> { DebouncedDetectionPolicy(get()) }
-    single<AudioClassifier> { MediaPipeAudioClassifier(androidContext()) }
+    single<AudioClassifier> {
+        MediaPipeAudioClassifier(
+            context = androidContext(),
+            interceptors = listOf(get<PrayTimesInterceptor>())
+        )
+    }
 
     // Communication
     single<SpeechToTextEngine> { AndroidSpeechToTextEngine(androidContext()) }

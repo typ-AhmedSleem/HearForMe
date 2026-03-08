@@ -188,6 +188,16 @@ abstract class SoundType(
         emoji = "🤫"
     )
 
+    data class PrayTime(
+        val prayNameRes: Int = R.string.sound_type_pray_times,
+    ) : SoundType(
+        nameRes = prayNameRes,
+        label = "PRAY_TIME",
+        priority = Priority.HIGH,
+        color = 0xFF009688,
+        emoji = "🕌"
+    )
+
     // Catch-all for any of the 521 YAMNet classes
     data class Generic(val yamnetClassName: String) : SoundType(
         emoji = "🔊",
