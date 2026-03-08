@@ -54,18 +54,12 @@ class CommunicationViewModel(
         }.launchIn(viewModelScope)
 
         sttEngine.error.onEach { error ->
-            _uiState.update { it.copy(error = error) }
+            _uiState.update { it.copy(error = error?.msg) }
+
             if (error != null) {
-                _engineState.value = when {
-                    error.contains("network", ignoreCase = true) || error.contains("connection", ignoreCase = true) ->
-                        CommunicationEngineState.Offline
-
-                    error.contains("busy", ignoreCase = true) || error.contains("conflict", ignoreCase = true) || error.contains(
-                        "audio",
-                        ignoreCase = true
-                    ) ->
-                        CommunicationEngineState.Busy
-
+                _engineState.value = when (error.code) {
+                    2, 4, 11, 15 -> CommunicationEngineState.Offline
+                    8, 3, 5 -> CommunicationEngineState.Busy
                     else -> CommunicationEngineState.Ready
                 }
             } else {
