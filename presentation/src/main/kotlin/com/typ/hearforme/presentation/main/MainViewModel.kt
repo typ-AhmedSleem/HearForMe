@@ -33,7 +33,7 @@ class MainViewModel(
     }
 
     fun startDetection() {
-        viewModelScope.launch {
+        /*viewModelScope.launch {
 //            if (classifier.isRunning.lastOrNull() == true) return@launch
             classifier.start()
             classifier.events.collect { event ->
@@ -42,7 +42,7 @@ class MainViewModel(
                     lastAlertTime = event.timestamp
                 }
             }
-        }
+        }*/
     }
 
     fun stopDetection() {
