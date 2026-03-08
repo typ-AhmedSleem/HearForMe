@@ -17,4 +17,6 @@ interface HapticEngine {
      * Performs a custom vibration pattern.
      */
     fun vibrate(pattern: LongArray, repeat: Int = -1)
+
+    fun vibratePattern(pattern: HapticVibrationPattern)
 }
