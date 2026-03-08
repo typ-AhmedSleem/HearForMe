@@ -1,5 +1,6 @@
 package com.typ.hearforme.domain.interceptors.prays
 
+import android.util.Log
 import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.interceptors.ClassifierInterceptor
 import com.typ.hearforme.domain.model.SoundEvent
@@ -35,7 +36,7 @@ class PrayTimesInterceptor : ClassifierInterceptor {
     )
     private var todayPrays = PrayerTimes.getTodayPrays(praysCalculator)
 
-    override fun intercept(event: SoundEvent): SoundEvent? {
+    override fun intercept(event: SoundEvent): SoundEvent {
         if (event.type !is SoundType.SomeoneSpeaking) {
             return event
         }
@@ -74,6 +75,7 @@ class PrayTimesInterceptor : ClassifierInterceptor {
                 timestamp = Timestamp.tomorrow()
             )
             // Re-run interception with new data
+            Log.w("PrayTimesInterceptor", "Tomorrow's prays loaded !!")
             return intercept(event)
         }
 
