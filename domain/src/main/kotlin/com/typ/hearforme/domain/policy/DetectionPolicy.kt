@@ -39,7 +39,7 @@ class DefaultDetectionPolicy(private val settingsRepository: SettingsRepository)
 
 class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepository) : DetectionPolicy {
 
-    private val cooldownMs = 250L
+    private val cooldownMs = 50L
     private var lastObservedLabel: String? = null
     private var lastReportedLabel: String? = null
     private var observationCount = 0
@@ -76,7 +76,7 @@ class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepositor
 
         // 3.1 Require 5 consecutive observations (only for silence)
         if (currentLabel == SoundType.Silence.label) {
-            return if (observationCount >= 5 && lastReportedLabel != currentLabel) {
+            return if (observationCount >= 30 && lastReportedLabel != currentLabel) {
                 lastReportedLabel = currentLabel
                 reset() // Reset after alert to require another 5 for next one (or rely on cooldown)
                 return true
@@ -86,7 +86,7 @@ class DebouncedDetectionPolicy(private val settingsRepository: SettingsRepositor
         }
 
         // 4. Require 2 consecutive observations (for all labels except silence)
-        return if (observationCount >= 1) {
+        return if (observationCount >= 3) {
             lastReportedLabel = currentLabel
             reset() // Reset after alert to require another 2 for next one (or rely on cooldown)
             true
