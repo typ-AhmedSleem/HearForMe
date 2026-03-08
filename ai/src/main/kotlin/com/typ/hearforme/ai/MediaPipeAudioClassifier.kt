@@ -153,13 +153,12 @@ class MediaPipeAudioClassifier(
                     confidence = 1.0f,
                     timestamp = System.currentTimeMillis()
                 )
-                emitIntercepted(event)
+                _events.emit(event)
             }
         } else {
             // Emit all active sound events
             activeEvents.forEach { engineEvent ->
-                Log.d("HearForMe", "Engine Event: ${engineEvent.group} (${engineEvent.confidence})")
-
+//                Log.d("HearForMe", "Engine Event: ${engineEvent.group} (${engineEvent.confidence})")
                 val soundType = SoundType.fromLabel(engineEvent.group)
                 if (soundType !is SoundType.Generic) {
                     val event = SoundEvent(
@@ -176,12 +175,16 @@ class MediaPipeAudioClassifier(
     }
 
     private suspend fun emitIntercepted(event: SoundEvent) {
-        var currentEvent: SoundEvent? = event
+        /*var currentEvent: SoundEvent = event
         for (interceptor in interceptors) {
             currentEvent = currentEvent?.let { interceptor.intercept(it) }
-            if (currentEvent == null) break
-        }
-        currentEvent?.let { _events.emit(it) }
+        }*/
+
+        val interceptedEvent = interceptors.first().intercept(event)
+            .also {
+                Log.i("HearForMe", "Intercepted event '${it.type.label}' => '${it.type.label}' (${it.confidence})")
+            }
+        _events.emit(interceptedEvent)
     }
 
     override fun stop() {
