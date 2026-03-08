@@ -102,6 +102,14 @@
     <string name="sound_type_music">موسيقى</string>
     <string name="sound_type_wind">رياح</string>
     <string name="sound_type_silence">هدوء</string>
+    <string name="sound_type_pray_times">موعد الأذان</string>
+
+    <string name="fajr">صلاة الفجر</string>
+    <string name="sunrise">شروق الشمس</string>
+    <string name="dhuhr">صلاة الظهر</string>
+    <string name="asr">صلاة العصر</string>
+    <string name="maghrib">صلاة المغرب</string>
+    <string name="isha">صلاة العشاء</string>
 
     <!-- Errors -->
     <string name="error_speech_recognition">خطأ في التعرف على الكلام: %1$d</string>

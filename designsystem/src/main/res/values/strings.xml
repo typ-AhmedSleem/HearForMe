@@ -100,6 +100,14 @@
     <string name="sound_type_music">Music</string>
     <string name="sound_type_wind">Wind</string>
     <string name="sound_type_silence">Silence</string>
+    <string name="sound_type_pray_times">Pray Time</string>
+
+    <string name="fajr">Fajr</string>
+    <string name="sunrise">Sunrise</string>
+    <string name="dhuhr">Dhuhr</string>
+    <string name="asr">Asr</string>
+    <string name="maghrib">Maghrib</string>
+    <string name="isha">Isha</string>
 
     <!-- Errors -->
     <string name="error_speech_recognition">Speech recognition error: %1$d</string>
