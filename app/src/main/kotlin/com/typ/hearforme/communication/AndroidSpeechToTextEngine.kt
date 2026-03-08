@@ -6,8 +6,11 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.speech.SpeechRecognizer.ERROR_SERVER_DISCONNECTED
+import android.util.Log
 import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.communication.SpeechToTextEngine
+import com.typ.hearforme.domain.model.EngineError
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -24,28 +27,50 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
     private val _isListening = MutableStateFlow(false)
     override val isListening = _isListening.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
+    private val _error = MutableStateFlow<EngineError?>(null)
     override val error = _error.asStateFlow()
 
     init {
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
+                Log.d("HearForMe", "onReadyForSpeech")
                 _isListening.value = true
                 _error.value = null
             }
 
             override fun onBeginningOfSpeech() {
+                Log.d("HearForMe", "onBeginningOfSpeech")
 //                _isListening.value = true
             }
-            override fun onRmsChanged(rmsdB: Float) {}
+
+            override fun onRmsChanged(rmsdB: Float) {
+            }
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {
+                Log.d("HearForMe", "onEndOfSpeech")
 //                _isListening.value = false
             }
 
             override fun onError(error: Int) {
                 _isListening.value = false
-                _error.value = context.getString(R.string.error_speech_recognition, error)
+
+                val errorMessage = when (error) {
+                    SpeechRecognizer.ERROR_AUDIO -> context.getString(R.string.error_audio)
+                    SpeechRecognizer.ERROR_CLIENT -> context.getString(R.string.error_client)
+                    SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> context.getString(R.string.error_insufficient_permissions)
+                    SpeechRecognizer.ERROR_NETWORK, ERROR_SERVER_DISCONNECTED -> context.getString(R.string.error_network)
+                    SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> context.getString(R.string.error_network_timeout)
+                    SpeechRecognizer.ERROR_NO_MATCH -> context.getString(R.string.error_no_match)
+                    SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> context.getString(R.string.error_recognizer_busy)
+                    SpeechRecognizer.ERROR_SERVER -> context.getString(R.string.error_server)
+                    SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> context.getString(R.string.error_speech_timeout)
+                    else -> context.getString(R.string.error_unknown, error)
+                }
+
+                _error.value = EngineError(
+                    msg = errorMessage,
+                    code = error,
+                )
             }
 
             override fun onResults(results: Bundle?) {
@@ -58,12 +83,13 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
 
             override fun onPartialResults(partialResults: Bundle?) {
                 val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (!matches.isNullOrEmpty()) {
-                    _partialResults.value = matches[0]
-                }
+                if (matches.isNullOrEmpty()) return
+                _partialResults.value = matches[0]
             }
 
-            override fun onEvent(eventType: Int, params: Bundle?) {}
+            override fun onEvent(eventType: Int, params: Bundle?) {
+                Log.d("HearForMe", "onEvent: $eventType")
+            }
         })
     }
 
