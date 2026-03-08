@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.typ.hearforme"
-        minSdk = 29
+        minSdk = 31
         targetSdk = 36
         versionCode = 3
         versionName = "1.2"
