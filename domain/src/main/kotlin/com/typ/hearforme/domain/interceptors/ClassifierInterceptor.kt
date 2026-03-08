@@ -18,6 +18,6 @@ interface ClassifierInterceptor {
      * @return The processed or modified sound event to be passed to the next stage,
      *         or null if the event should be dropped.
      */
-    fun intercept(event: SoundEvent): SoundEvent?
+    fun intercept(event: SoundEvent): SoundEvent
 
 }

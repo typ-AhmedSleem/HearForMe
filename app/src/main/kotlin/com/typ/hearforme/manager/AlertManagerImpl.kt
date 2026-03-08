@@ -7,6 +7,7 @@ import com.typ.hearforme.domain.manager.AlertManager
 import com.typ.hearforme.domain.manager.HapticEngine
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.domain.model.SoundType.Priority
 import com.typ.hearforme.domain.repository.HistoryRepository
 import com.typ.hearforme.domain.repository.SettingsRepository
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +41,19 @@ class AlertManagerImpl(
     private val scope = CoroutineScope(Dispatchers.Default)
 
     override fun onSoundDetected(event: SoundEvent) {
-        val activeAlertLabel = _activeAlert.value?.type?.label ?: ""
+        val activeAlert = _activeAlert.value
+        val activeAlertLabel = activeAlert?.type?.label ?: ""
+        val activePriority = activeAlert?.type?.priority ?: Priority.LOW
+
+        // * Discard if already showing alert for same event
+        if (event.type.label.equals(activeAlertLabel, true)) {
+            return
+        }
+
+        // * Discard if already an active is visible and has above NORMAL priority
+        if (activePriority > Priority.NORMAL) {
+            return
+        }
 
         // Handle Silence: Reset UI state to identifying
         if (event.type is SoundType.Silence) {
@@ -49,9 +62,6 @@ class AlertManagerImpl(
             Log.d("HearForMe", "Silence detected, resetting UI.")
             return
         }
-
-        // * Check if already showing alert for same event
-        if (event.type.label.equals(activeAlertLabel, true)) return
 
         // * Set as active alert
         _activeAlert.value = event
@@ -113,7 +123,7 @@ class AlertManagerImpl(
         }
 
         // Critical vibration via engine
-        hapticEngine.vibrateForPriority(SoundType.Priority.CRITICAL)
+        hapticEngine.vibrateForPriority(Priority.CRITICAL)
     }
 
     /**
@@ -128,7 +138,7 @@ class AlertManagerImpl(
      * @see HapticEngine.vibrateForPriority
      * @see strobe
      */
-    private fun triggerFeedback(priority: SoundType.Priority) {
+    private fun triggerFeedback(priority: Priority) {
         scope.launch {
             if (settingsRepository.isVibrationEnabled.first()) {
                 hapticEngine.vibrateForPriority(priority)
