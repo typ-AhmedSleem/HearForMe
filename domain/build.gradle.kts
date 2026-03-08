@@ -22,4 +22,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.koin.core)
     implementation(project(":designsystem"))
+    implementation(project(":islamic-toolkit-kt:core"))
+    implementation(project(":islamic-toolkit-kt:praytimes"))
+
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
 }
