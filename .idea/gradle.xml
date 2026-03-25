@@ -15,6 +15,9 @@
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/designsystem" />
             <option value="$PROJECT_DIR$/domain" />
+            <option value="$PROJECT_DIR$/islamic-toolkit-kt" />
+            <option value="$PROJECT_DIR$/islamic-toolkit-kt/core" />
+            <option value="$PROJECT_DIR$/islamic-toolkit-kt/praytimes" />
             <option value="$PROJECT_DIR$/mock" />
             <option value="$PROJECT_DIR$/presentation" />
           </set>

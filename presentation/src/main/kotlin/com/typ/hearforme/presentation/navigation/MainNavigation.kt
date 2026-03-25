@@ -7,7 +7,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -25,6 +29,8 @@ import com.typ.hearforme.presentation.onboarding.ONBOARDING_LAST_STEP_INDEX
 import com.typ.hearforme.presentation.onboarding.OnboardingScreen
 import com.typ.hearforme.presentation.settings.SettingsScreen
 import com.typ.hearforme.presentation.welcome.WelcomeScreen
+import com.typ.hearforme.presentation.Event
+import com.typ.hearforme.presentation.EventsPipe
 import org.koin.compose.viewmodel.koinViewModel
 
 sealed class Screen(val route: String) {
@@ -47,6 +53,16 @@ fun MainNavigation(
 ) {
     val activeAlert by dashboardViewModel.activeAlert.collectAsStateWithLifecycle()
     val hasCompletedOnboarding by mainViewModel.hasCompletedOnboarding.collectAsStateWithLifecycle()
+    var errorEvent by remember { mutableStateOf<Event.Error?>(null) }
+
+    LaunchedEffect(Unit) {
+        EventsPipe.events.collect { event ->
+            when (event) {
+                is Event.Error -> errorEvent = event
+                Event.None -> errorEvent = null
+            }
+        }
+    }
 
     Box {
         NavHost(
@@ -131,6 +147,14 @@ fun MainNavigation(
                     onDismiss = { dashboardViewModel.dismissAlert() }
                 )
             }
+        }
+
+        // Error Bottom Sheet
+        errorEvent?.let { event ->
+            ErrorBottomSheet(
+                event = event,
+                onDismiss = { errorEvent = null }
+            )
         }
     }
 }

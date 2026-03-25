@@ -112,6 +112,7 @@
     <string name="isha">صلاة العشاء</string>
 
     <!-- Errors -->
+    <string name="error">خطأ</string>
     <string name="error_audio">خطأ في تسجيل الصوت</string>
     <string name="error_client">خطأ في جانب العميل</string>
     <string name="error_insufficient_permissions">صلاحيات غير كافية</string>
