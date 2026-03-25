@@ -34,7 +34,7 @@ class PrayTimesInterceptor : ClassifierInterceptor {
             higherLatMethod = HigherLatitudeMethod.ONESEVENTH
         }
     )
-    private var todayPrays = PrayerTimes.getTodayPrays(praysCalculator)
+    var todayPrays = PrayerTimes.getTodayPrays(praysCalculator)
 
     override fun intercept(event: SoundEvent): SoundEvent {
         if (event.type !is SoundType.SomeoneSpeaking) {

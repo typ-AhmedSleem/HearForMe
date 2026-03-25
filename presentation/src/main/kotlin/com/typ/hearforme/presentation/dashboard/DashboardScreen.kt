@@ -57,7 +57,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -67,6 +69,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceAtLeast
@@ -77,8 +80,18 @@ import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.OnBackground
 import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.TextSecondary
+import com.typ.hearforme.domain.interceptors.prays.PrayTimesInterceptor
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.presentation.preview.PreviewContainer
+import com.typ.islamictkt.prays.enums.PrayType.ASR
+import com.typ.islamictkt.prays.enums.PrayType.DHUHR
+import com.typ.islamictkt.prays.enums.PrayType.FAJR
+import com.typ.islamictkt.prays.enums.PrayType.ISHA
+import com.typ.islamictkt.prays.enums.PrayType.MAGHRIB
+import com.typ.islamictkt.prays.enums.PrayType.SUNRISE
+import com.typ.islamictkt.prays.models.Pray
+import kotlinx.coroutines.delay
 import org.koin.compose.viewmodel.koinViewModel
 import org.ocpsoft.prettytime.PrettyTime
 import java.util.Date
@@ -95,6 +108,7 @@ fun DashboardScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
     val rms by viewModel.rms.collectAsStateWithLifecycle()
+    val nextPray by viewModel.nextPray.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -149,8 +163,11 @@ fun DashboardScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPaddings)
+                .padding(innerPaddings),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            PrayTimeCountdown(nextPray)
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -582,5 +599,69 @@ fun DashboardBottomBar(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun PrayTimeCountdown(nextPray: Pray?) {
+    if (nextPray == null) return
+
+    var remainMillis by remember(nextPray) { mutableLongStateOf(nextPray.time.toMillis() - System.currentTimeMillis()) }
+
+    LaunchedEffect(nextPray) {
+        while (true) {
+            remainMillis = nextPray.time.toMillis() - System.currentTimeMillis()
+            delay(1000)
+        }
+    }
+
+    if (remainMillis > 0) {
+        val h = remainMillis / 3600000
+        val m = (remainMillis % 3600000) / 60000
+        val s = (remainMillis % 60000) / 1000
+        val timeString = String.format(
+            locale = Locale.getDefault(),
+            format = "%02d:%02d:%02d",
+            h, m, s
+        )
+
+        Surface(
+            modifier = Modifier.padding(top = 8.dp),
+            shape = RoundedCornerShape(12.dp),
+            color = Color(0xFF009688).copy(alpha = 0.1f)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("🕌", fontSize = 14.sp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = stringResource(
+                        when (nextPray.type) {
+                            FAJR -> R.string.fajr
+                            SUNRISE -> R.string.sunrise
+                            DHUHR -> R.string.dhuhr
+                            ASR -> R.string.asr
+                            MAGHRIB -> R.string.maghrib
+                            ISHA -> R.string.isha
+                        }
+                    ) + " ${stringResource(R.string.suffix_in)} " + timeString,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF009688),
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Preview
+@Composable
+private fun PrayTimeCountdownPreview() {
+    val prays = remember { PrayTimesInterceptor().todayPrays }
+    val nextPray = prays.nextPray
+    PreviewContainer {
+        PrayTimeCountdown(nextPray)
     }
 }
