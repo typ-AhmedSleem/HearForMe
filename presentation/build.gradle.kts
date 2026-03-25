@@ -33,9 +33,12 @@ android {
 dependencies {
     implementation(project(":domain"))
     implementation(project(":designsystem"))
-    
+    implementation(project(":islamic-toolkit-kt:core"))
+    implementation(project(":islamic-toolkit-kt:praytimes"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+//    implementation(libs.androidx.lifecycle.viewmodelKtx)
     implementation(libs.androidx.lifecycle.viewmodelCompose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
