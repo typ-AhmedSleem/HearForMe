@@ -125,4 +125,5 @@
     <string name="error_tts_failed">Failed to initialize TTS</string>
     <string name="error_tts_lang_not_supported">Language %1$s not supported</string>
     <string name="notification_action_stop">Stop detection</string>
+    <string name="suffix_in">in</string>
 </resources>

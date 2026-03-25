@@ -1,5 +1,6 @@
 package com.typ.hearforme.presentation.preview
 
+import android.content.Context
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
@@ -15,15 +16,20 @@ fun PreviewContainer(
     modules: List<Module> = emptyList(),
     content: @Composable () -> Unit,
 ) {
+    val ctx = LocalContext.current
+    startKoinSafely(ctx, modules)
+
+    HearForMeTheme(darkTheme = darkTheme) {
+        content()
+    }
+}
+
+private fun startKoinSafely(ctx: Context, modules: List<Module>) {
     runCatching {
-        val ctx = LocalContext.current
         startKoin {
             androidLogger()
             androidContext(ctx)
             modules(modules)
         }
-    }
-    HearForMeTheme(darkTheme = darkTheme) {
-        content()
     }
 }
