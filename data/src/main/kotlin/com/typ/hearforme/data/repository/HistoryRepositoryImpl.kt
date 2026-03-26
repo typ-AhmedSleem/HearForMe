@@ -23,7 +23,13 @@ class HistoryRepositoryImpl(
             .map { entities ->
                 entities.map { entity ->
                     SoundEvent(
-                        type = SoundType.fromLabel(entity.type),
+                        type = if (entity.type == "PRAY_TIME") {
+                            val prayNameResId = entity.metadata?.toIntOrNull()
+                            prayNameResId?.let { SoundType.PrayTime(it) }
+                                ?: SoundType.fromLabel(entity.type)
+                        } else {
+                            SoundType.fromLabel(entity.type)
+                        },
                         confidence = entity.confidence.toFloat(),
                         timestamp = entity.timestamp
                     )
@@ -32,11 +38,16 @@ class HistoryRepositoryImpl(
     }
 
     override suspend fun saveEvent(event: SoundEvent) {
+        val type = event.type
         queries.insertEvent(
             type = event.type.label,
             confidence = event.confidence.toDouble(),
             timestamp = event.timestamp,
-            metadata = null
+            metadata = if (type is SoundType.PrayTime) {
+                type.prayNameRes.toString()
+            } else {
+                null
+            }
         )
     }
 
