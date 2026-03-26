@@ -109,7 +109,18 @@ class HapticEngineImpl(context: Context) : HapticEngine {
                 pattern.pattern,
                 pattern.amplitude shouldMatchLengthOf pattern.pattern,
                 pattern.repeatCount
-            ).also { vibrator.vibrate(it) }
+            ).also {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    vibrator.vibrate(
+                        it,
+                        VibrationAttributes.Builder()
+                            .setUsage(VibrationAttributes.USAGE_CLASS_FEEDBACK)
+                            .build()
+                    )
+                } else {
+                    vibrator.vibrate(it)
+                }
+            }
         }
     }
 
