@@ -56,6 +56,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
@@ -75,6 +76,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.OnBackground
@@ -105,11 +108,19 @@ fun DashboardScreen(
     onNavigateToCommunication: () -> Unit = {},
     onSOSClick: () -> Unit = {},
 ) {
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val history by viewModel.history.collectAsStateWithLifecycle()
     val rms by viewModel.rms.collectAsStateWithLifecycle()
-    val nextPray by viewModel.nextPray.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val nextPray by remember(uiState) {
+        derivedStateOf {
+            val state = uiState
+            if (state is DashboardUiState.Identifying) {
+                state.nextPray
+            } else null
+        }
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -125,6 +136,13 @@ fun DashboardScreen(
 
         viewModel.requestPermissionTrigger.collect {
             permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
+    }
+    LaunchedEffect(Unit) {
+        lifecycle.currentStateFlow.collect {
+            if (it == Lifecycle.State.RESUMED) {
+                viewModel.trackNextPrayTime()
+            }
         }
     }
 
@@ -378,7 +396,7 @@ fun SoundVisualizer(
                     when (targetState) {
                         DashboardUiState.MicAccessRequired -> Text("🎤", fontSize = 80.sp, color = Color.LightGray)
                         DashboardUiState.ServiceOffline -> Text("💤", fontSize = 80.sp, color = Color.LightGray)
-                        DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
+                        is DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
                         is DashboardUiState.Identified -> Text(targetState.event.type.emoji, fontSize = 80.sp)
                     }
                 }
@@ -407,7 +425,7 @@ fun SoundVisualizer(
                         Text(stringResource(R.string.dashboard_start_listening), color = TextSecondary, fontSize = 14.sp)
                     }
 
-                    DashboardUiState.Identifying -> {
+                    is DashboardUiState.Identifying -> {
 //                StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
