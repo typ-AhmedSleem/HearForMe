@@ -283,6 +283,7 @@ abstract class SoundType(
                 lowerLabel.containsAny(birdLabels) -> BirdChirping
                 lowerLabel.containsAny(musicLabels) -> Music
                 lowerLabel.containsAny(windLabels) -> Wind
+                lowerLabel.containsIgnoringCase("PRAY_TIME") -> PrayTime()
                 else -> Generic(label)
             }
         }

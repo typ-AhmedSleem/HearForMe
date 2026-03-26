@@ -501,6 +501,17 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
+        val type = event.type
+        val eventName = if (type is SoundType.PrayTime) {
+            stringResource(R.string.sound_type_pray_times)
+        } else {
+            if (type.nameRes != 0) {
+                stringResource(type.nameRes)
+            } else {
+                (type as? SoundType.Generic)?.displayName ?: ""
+            }
+        }
+
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -518,7 +529,7 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName ?: "",
+                    text = eventName,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
