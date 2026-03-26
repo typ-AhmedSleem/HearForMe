@@ -1,5 +1,7 @@
 package com.typ.hearforme.presentation.dashboard
 
+import android.util.Log
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.typ.hearforme.designsystem.R
@@ -24,6 +26,7 @@ import com.typ.islamictkt.prays.lib.PrayerTimesCalculator
 import com.typ.islamictkt.prays.models.Pray
 import com.typ.islamictkt.prays.models.PrayerTimes
 import com.typ.islamictkt.prays.utils.prayerTimesCalcConfig
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,12 +37,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
+@Immutable
 sealed interface DashboardUiState {
     object MicAccessRequired : DashboardUiState
     object ServiceOffline : DashboardUiState
-    object Identifying : DashboardUiState
+    data class Identifying(val nextPray: Pray?) : DashboardUiState
     data class Identified(val event: SoundEvent) : DashboardUiState
 }
 
@@ -59,8 +64,7 @@ class DashboardViewModel(
         }
     )
 
-    private val _nextPray = MutableStateFlow<Pray?>(null)
-    val nextPray = _nextPray.asStateFlow()
+    private val _nextPrayFlow = MutableStateFlow<Pray?>(null)
 
     private val _isMicPermissionGranted = MutableStateFlow(true)
     val isMicPermissionGranted = _isMicPermissionGranted.asStateFlow()
@@ -68,39 +72,28 @@ class DashboardViewModel(
     private val _requestPermissionTrigger = MutableSharedFlow<Unit>()
     val requestPermissionTrigger: SharedFlow<Unit> = _requestPermissionTrigger.asSharedFlow()
 
+    private var jobTrackNextPrayTime: Job? = null
+
     init {
         trackNextPrayTime()
     }
 
-    private fun trackNextPrayTime() {
-        viewModelScope.launch {
-            while (true) {
+    internal fun trackNextPrayTime() {
+        jobTrackNextPrayTime?.cancel()
+        jobTrackNextPrayTime = viewModelScope.launch {
+            Log.i("DashboardViewModel", "trackNextPrayTime is called.")
+            while (isActive) {
                 val todayPrays = PrayerTimes.getTodayPrays(praysCalculator)
                 val next = PrayerTimes.getNextPray(todayPrays) ?: PrayerTimes.getPrays(praysCalculator, Timestamp.tomorrow()).fajr
 
-                _nextPray.value = next
+                _nextPrayFlow.value = next
 
-                val delayMillis = next.time.toMillis() - System.currentTimeMillis()
-                if (delayMillis > 0) {
-                    delay(delayMillis)
-                    // Trigger alert
-                    val eventType = when (next.type) {
-                        FAJR -> SoundType.PrayTime(prayNameRes = R.string.fajr)
-                        SUNRISE -> SoundType.PrayTime(prayNameRes = R.string.sunrise)
-                        DHUHR -> SoundType.PrayTime(prayNameRes = R.string.dhuhr)
-                        ASR -> SoundType.PrayTime(prayNameRes = R.string.asr)
-                        MAGHRIB -> SoundType.PrayTime(prayNameRes = R.string.maghrib)
-                        ISHA -> SoundType.PrayTime(prayNameRes = R.string.isha)
-                    }
-                    triggerAlertFeedback(
-                        SoundEvent(
-                            type = eventType,
-                            confidence = 1.0f,
-                            timestamp = System.currentTimeMillis()
-                        )
-                    )
+                var delayMillis = next.time.toMillis() - System.currentTimeMillis()
+                while (delayMillis > 0) {
+                    delayMillis -= 1000
+                    delay(1000)
                 }
-                delay(1000) // Small buffer
+                triggerPrayTimeAlert(next)
             }
         }
     }
@@ -109,13 +102,14 @@ class DashboardViewModel(
         isMicPermissionGranted,
         settingsRepository.isDetectionEnabled,
         classifier.isRunning,
-        alertManager.activeAlert
-    ) { hasMic, isEnabled, isRunning, activeAlert ->
+        alertManager.activeAlert,
+        _nextPrayFlow,
+    ) { hasMic, isEnabled, isRunning, activeAlert, nextPray ->
         when {
             !hasMic -> DashboardUiState.MicAccessRequired
             !isEnabled || !isRunning -> DashboardUiState.ServiceOffline
             activeAlert != null -> DashboardUiState.Identified(activeAlert)
-            else -> DashboardUiState.Identifying
+            else -> DashboardUiState.Identifying(nextPray)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.ServiceOffline)
 
@@ -160,6 +154,27 @@ class DashboardViewModel(
 
     fun triggerAlertFeedback(event: SoundEvent) {
         alertManager.triggerAlertFeedback(event)
+    }
+
+    fun triggerPrayTimeAlert(pray: Pray) {
+        Log.i("DashboardViewModel", "triggerPrayTimeAlert is called.")
+        // Trigger alert
+        val eventType = when (pray.type) {
+            FAJR -> SoundType.PrayTime(prayNameRes = R.string.fajr)
+            SUNRISE -> SoundType.PrayTime(prayNameRes = R.string.sunrise)
+            DHUHR -> SoundType.PrayTime(prayNameRes = R.string.dhuhr)
+            ASR -> SoundType.PrayTime(prayNameRes = R.string.asr)
+            MAGHRIB -> SoundType.PrayTime(prayNameRes = R.string.maghrib)
+            ISHA -> SoundType.PrayTime(prayNameRes = R.string.isha)
+        }
+        alertManager.onSoundDetected(
+            SoundEvent(
+                type = eventType,
+                confidence = 1.0f,
+                timestamp = System.currentTimeMillis()
+            )
+        )
+        Log.i("DashboardViewModel", "triggerPrayTimeAlert finished..")
     }
 
     fun triggerSOS() {
