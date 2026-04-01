@@ -1,6 +1,7 @@
 package com.typ.hearforme.manager
 
 import android.content.Context
+import android.media.AudioAttributes
 import android.os.Build
 import android.os.VibrationAttributes
 import android.os.VibrationEffect
@@ -54,44 +55,11 @@ class HapticEngineImpl(context: Context) : HapticEngine {
         repeat(pattern.repeatCount) {
             vibratePattern(pattern)
         }
-
-        /*val (timings, amplitudes) = when (priority) {
-            // Intense staccato bursts followed by a sustained long vibration
-            SoundType.Priority.CRITICAL -> longArrayOf(
-                0, 150, 50, 150, 50, 150, 50, 600
-            ) to intArrayOf(
-                AMP_OFF, AMP_MAX, AMP_OFF, AMP_MAX, AMP_OFF, AMP_MAX, AMP_OFF, AMP_MAX
-            )
-
-            // Strong double-pulse pattern
-            SoundType.Priority.HIGH -> longArrayOf(
-                0, 300, 80, 300, 80, 400
-            ) to intArrayOf(
-                AMP_OFF, AMP_MAX, AMP_OFF, AMP_STRONG, AMP_OFF, AMP_MAX
-            )
-
-            // Single powerful pulse
-            SoundType.Priority.NORMAL -> longArrayOf(
-                0, 500, 100, 300
-            ) to intArrayOf(
-                AMP_OFF, AMP_STRONG, AMP_OFF, AMP_MEDIUM
-            )
-
-            // Short subtle tap
-            SoundType.Priority.LOW -> longArrayOf(
-                0, 250
-            ) to intArrayOf(
-                AMP_OFF, AMP_MEDIUM
-            )
-        }
-
-        vibrateWithAmplitudes(timings, amplitudes)*/
     }
 
     override fun performInteractionFeedback() {
         if (!hasVibrator) return
         vibratePattern(HapticVibrationPattern.InteractionPriority)
-//        vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK))
     }
 
     override fun vibrate(pattern: LongArray, repeat: Int) {
@@ -109,16 +77,53 @@ class HapticEngineImpl(context: Context) : HapticEngine {
                 pattern.pattern,
                 pattern.amplitude shouldMatchLengthOf pattern.pattern,
                 pattern.repeatCount
-            ).also {
+            ).also { effect ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    vibrator.vibrate(
-                        it,
-                        VibrationAttributes.Builder()
-                            .setUsage(VibrationAttributes.USAGE_CLASS_FEEDBACK)
-                            .build()
-                    )
+                    val attributes = VibrationAttributes.Builder().apply {
+                        when (pattern) {
+                            is HapticVibrationPattern.InteractionPriority -> {
+                                setUsage(VibrationAttributes.USAGE_TOUCH)
+                            }
+
+                            is HapticVibrationPattern.CriticalPriority -> {
+                                setUsage(VibrationAttributes.USAGE_ALARM)
+                                setFlags(
+                                    VibrationAttributes.FLAG_BYPASS_INTERRUPTION_POLICY,
+                                    VibrationAttributes.FLAG_BYPASS_INTERRUPTION_POLICY
+                                )
+                            }
+
+                            else -> {
+                                // Sound detection alerts (Low, Normal, High)
+                                setUsage(VibrationAttributes.USAGE_NOTIFICATION)
+                                setFlags(
+                                    VibrationAttributes.FLAG_BYPASS_INTERRUPTION_POLICY,
+                                    VibrationAttributes.FLAG_BYPASS_INTERRUPTION_POLICY
+                                )
+                            }
+                        }
+                    }.build()
+                    vibrator.vibrate(effect, attributes)
                 } else {
-                    vibrator.vibrate(it)
+                    @Suppress("DEPRECATION")
+                    val audioAttributes = AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .apply {
+                            when (pattern) {
+                                is HapticVibrationPattern.InteractionPriority -> {
+                                    setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
+                                }
+
+                                is HapticVibrationPattern.CriticalPriority -> {
+                                    setUsage(AudioAttributes.USAGE_ALARM)
+                                }
+
+                                else -> {
+                                    setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                                }
+                            }
+                        }.build()
+                    vibrator.vibrate(effect, audioAttributes)
                 }
             }
         }
