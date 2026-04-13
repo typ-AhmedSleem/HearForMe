@@ -138,6 +138,7 @@ class MediaPipeAudioClassifier(
         classifications.forEach { classification ->
             classification.categories().forEach { category ->
                 rawResults[category.categoryName()] = category.score()
+                Log.i("HearForMe", "Raw Result: ${category.categoryName()} (${category.score()})")
             }
         }
 

@@ -241,7 +241,7 @@ abstract class SoundType(
         private val waterLabels = listOf("water", "stream", "waterfall", "gurgling", "rain", "drip", "pour", "trickle", "gush")
         private val glassLabels = listOf("glass", "shatter", "chink", "clink")
         private val knockLabels = listOf("knock", "door", "tap", "slam")
-        private val hornLabels = listOf("horn", "honk", "toot")
+        private val hornLabels = listOf("horn", "honk", "toot", "vehicle horn", "honking", "car horn", "Vehicle horn, car horn, honking".lowercase())
         private val telephoneLabels = listOf("telephone", "ringtone", "ring")
         private val thunderLabels = listOf("thunder", "thunderstorm")
         private val birdLabels = listOf("bird", "chirp", "tweet", "squawk")
@@ -259,6 +259,15 @@ abstract class SoundType(
 
             // * Handle silence explicitly
             if (lowerLabel.containsIgnoringCase("silence")) return Silence
+            if (lowerLabel.containsIgnoringCase("Vehicle horn, car horn, honking")) {
+                return VehicleHorn
+            }
+            if (lowerLabel.containsIgnoringCase("car")) {
+                return VehicleHorn
+            }
+            if (lowerLabel.containsIgnoringCase("vehicle")) {
+                return VehicleHorn
+            }
 
             // * Check alternative and grouped YAMNet labels
             return when {

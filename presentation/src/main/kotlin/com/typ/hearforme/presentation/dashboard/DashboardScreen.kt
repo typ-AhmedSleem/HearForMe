@@ -580,22 +580,22 @@ fun DashboardBottomBar(
                 ),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = onCommunicationClick,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.size(50.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            "💬",
-                            fontSize = 24.sp,
-                            color = MaterialTheme.colorScheme.surface
-                        )
-                    }
-                }
+//                IconButton(
+//                    onClick = onCommunicationClick,
+//                    shape = RoundedCornerShape(24.dp),
+//                    modifier = Modifier.size(50.dp),
+//                    colors = IconButtonDefaults.filledIconButtonColors(
+//                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
+//                    )
+//                ) {
+//                    Box(contentAlignment = Alignment.Center) {
+//                        Text(
+//                            "💬",
+//                            fontSize = 24.sp,
+//                            color = MaterialTheme.colorScheme.surface
+//                        )
+//                    }
+//                }
 
                 IconButton(
                     onClick = onHistoryClick,
