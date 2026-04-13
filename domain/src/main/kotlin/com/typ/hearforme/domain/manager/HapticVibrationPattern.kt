@@ -3,7 +3,7 @@ package com.typ.hearforme.domain.manager
 
 sealed class HapticVibrationPattern(
     val pattern: LongArray,
-    val repeatCount: Int = 1,
+    val repeatCount: Int = -1,
     val amplitude: IntArray,
 ) {
 
