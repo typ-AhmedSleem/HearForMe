@@ -11,6 +11,8 @@ import android.util.Log
 import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.domain.communication.SpeechToTextEngine
 import com.typ.hearforme.domain.model.EngineError
+import com.typ.hearforme.presentation.Event
+import com.typ.hearforme.presentation.EventsPipe
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -40,7 +42,7 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
 
             override fun onBeginningOfSpeech() {
                 Log.d("HearForMe", "onBeginningOfSpeech")
-//                _isListening.value = true
+                _isListening.value = true
             }
 
             override fun onRmsChanged(rmsdB: Float) {
@@ -48,7 +50,7 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
             override fun onBufferReceived(buffer: ByteArray?) {}
             override fun onEndOfSpeech() {
                 Log.d("HearForMe", "onEndOfSpeech")
-//                _isListening.value = false
+                _isListening.value = false
             }
 
             override fun onError(error: Int) {
@@ -71,6 +73,8 @@ class AndroidSpeechToTextEngine(private val context: Context) : SpeechToTextEngi
                     msg = errorMessage,
                     code = error,
                 )
+
+                EventsPipe.sendEvent(Event.Error(title = context.getString(R.string.speech_engine_error), message = errorMessage))
             }
 
             override fun onResults(results: Bundle?) {
