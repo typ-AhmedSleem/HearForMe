@@ -126,4 +126,6 @@
     <string name="error_tts_lang_not_supported">Language %1$s not supported</string>
     <string name="notification_action_stop">Stop detection</string>
     <string name="suffix_in">in</string>
+    <string name="speech_engine_error">Speech Engine Error</string>
+    <string name="dashboard_possible_sounds">Possible Sounds</string>
 </resources>
