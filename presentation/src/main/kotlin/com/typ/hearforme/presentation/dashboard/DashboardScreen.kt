@@ -4,17 +4,10 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -344,77 +337,71 @@ fun DashboardStateTextAndContent(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AnimatedContent(
-            targetState = state,
-            transitionSpec = { fadeIn() + expandVertically() togetherWith fadeOut() + shrinkVertically() },
-            label = "StateText"
-        ) { currentState ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                when (currentState) {
-                    DashboardUiState.MicAccessRequired -> {
-                        Text("🎤", fontSize = 64.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(stringResource(R.string.dashboard_mic_required), fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            when (state) {
+                DashboardUiState.MicAccessRequired -> {
+                    Text("🎤", fontSize = 64.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(stringResource(R.string.dashboard_mic_required), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.dashboard_grant_permission),
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                DashboardUiState.ServiceOffline -> {
+                    Text("💤", fontSize = 64.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(stringResource(R.string.dashboard_detection_offline), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.dashboard_start_listening),
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                is DashboardUiState.Identifying -> {
+                    Text(
+                        stringResource(R.string.dashboard_listening),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                is DashboardUiState.Identified -> {
+                    val event = state.event
+                    Text(event.type.emoji, fontSize = 64.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    StatusBadge(
+                        color = Color(event.type.color),
+                        text = stringResource(
+                            R.string.dashboard_confidence_percentage,
+                            event.confidence
+                                .fastCoerceIn(0f, 0.95f)
+                                .times(100)
+                                .toInt()
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName
+                            ?: "",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    if (event.type is SoundType.SomeoneSpeaking) {
                         Text(
-                            stringResource(R.string.dashboard_grant_permission),
+                            stringResource(R.string.dashboard_tap_to_see),
                             color = TextSecondary,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
+                            fontSize = 16.sp
                         )
-                    }
-
-                    DashboardUiState.ServiceOffline -> {
-                        Text("💤", fontSize = 64.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(stringResource(R.string.dashboard_detection_offline), fontWeight = FontWeight.Bold, fontSize = 24.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            stringResource(R.string.dashboard_start_listening),
-                            color = TextSecondary,
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    is DashboardUiState.Identifying -> {
-                        Text(
-                            stringResource(R.string.dashboard_listening),
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    is DashboardUiState.Identified -> {
-                        val event = currentState.event
-                        Text(event.type.emoji, fontSize = 64.sp)
-                        Spacer(modifier = Modifier.height(16.dp))
-                        StatusBadge(
-                            color = Color(event.type.color),
-                            text = stringResource(
-                                R.string.dashboard_confidence_percentage,
-                                event.confidence
-                                    .fastCoerceIn(0f, 0.95f)
-                                    .times(100)
-                                    .toInt()
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName
-                                ?: "",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        if (event.type is SoundType.SomeoneSpeaking) {
-                            Text(
-                                stringResource(R.string.dashboard_tap_to_see),
-                                color = TextSecondary,
-                                fontSize = 16.sp
-                            )
-                        }
                     }
                 }
             }
