@@ -114,12 +114,12 @@ class MediaPipeAudioClassifier(
                 .build(),
             15600
         )
-        val shortArray = ShortArray(15600) // matches tensorAudio capacity
+        ShortArray(15600) // matches tensorAudio capacity
 
         pollingJob = scope.launch {
             while (isActive && _isRunning.value) {
                 try {
-                    val readSize = record.read(shortArray, 0, shortArray.size)
+                    /*val readSize = record.read(shortArray, 0, shortArray.size)
                     if (readSize > 0) {
                         // Calculate RMS
                         var sumSquare = 0.0f
@@ -128,18 +128,24 @@ class MediaPipeAudioClassifier(
                             sumSquare += sample * sample
                         }
                         val rmsValue = kotlin.math.sqrt((sumSquare / readSize).toDouble()).toFloat()
-                        _rms.tryEmit(rmsValue)
+                        _rms.tryEmit(rmsValue).also {
+                            Log.d("HearForMe", "Emitting RMS($rmsValue) is successful= '$it'.")
+                        }
 
+                    }*/
                         // Load to MediaPipe tensor
-                        tensorAudio.load(shortArray, 0, readSize)
+                    tensorAudio.load(record)
                         val results = audioClassifier.classify(tensorAudio)
                         processResults(results)
-                    }
                 } catch (t: Throwable) {
                     Log.e("HearForMe", "Polling error", t)
                     break
                 }
                 delay(10)
+            }
+        }.apply {
+            invokeOnCompletion { cause ->
+                Log.d("HearForMe", "Polling finished. Cause: '$cause'.")
             }
         }
     }
@@ -173,6 +179,7 @@ class MediaPipeAudioClassifier(
                     )
                 } else null
             }
+            .filterNot { it.type is SoundType.Silence }
             .toList()
         _possibleSounds.value = top4
 
