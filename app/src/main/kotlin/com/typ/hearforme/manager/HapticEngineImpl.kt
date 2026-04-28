@@ -52,9 +52,7 @@ class HapticEngineImpl(context: Context) : HapticEngine {
             }
         }
 
-        repeat(pattern.repeatCount) {
-            vibratePattern(pattern)
-        }
+        vibratePattern(pattern)
     }
 
     override fun performInteractionFeedback() {
