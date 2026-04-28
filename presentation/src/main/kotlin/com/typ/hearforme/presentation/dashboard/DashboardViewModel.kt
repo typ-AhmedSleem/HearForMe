@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 sealed interface DashboardUiState {
     object MicAccessRequired : DashboardUiState
     object ServiceOffline : DashboardUiState
-    data class Identifying(val nextPray: Pray?) : DashboardUiState
+    data class Identifying(val nextPray: Pray?, val possibleSounds: List<SoundEvent> = emptyList()) : DashboardUiState
     data class Identified(val event: SoundEvent) : DashboardUiState
 }
 
@@ -61,6 +61,7 @@ class DashboardViewModel(
             calcMethod = CalculationMethod.EGYPT
             asrMethod = AsrMethod.SHAFII
             higherLatMethod = HigherLatitudeMethod.ONESEVENTH
+//            timezone = java.util.TimeZone.getDefault().id
         }
     )
 
@@ -104,12 +105,19 @@ class DashboardViewModel(
         classifier.isRunning,
         alertManager.activeAlert,
         _nextPrayFlow,
-    ) { hasMic, isEnabled, isRunning, activeAlert, nextPray ->
+        classifier.possibleSounds,
+    ) { combined ->
+        val hasMic = combined[0] as Boolean
+        val isEnabled = combined[1] as Boolean
+        val isRunning = combined[2] as Boolean
+        val activeAlert = combined[3] as SoundEvent?
+        val nextPray = combined[4] as Pray?
+        val possibleSounds = combined[5] as List<SoundEvent>
         when {
             !hasMic -> DashboardUiState.MicAccessRequired
             !isEnabled || !isRunning -> DashboardUiState.ServiceOffline
             activeAlert != null -> DashboardUiState.Identified(activeAlert)
-            else -> DashboardUiState.Identifying(nextPray)
+            else -> DashboardUiState.Identifying(nextPray, possibleSounds)
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState.ServiceOffline)
 
