@@ -4,10 +4,16 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -407,43 +413,66 @@ fun DashboardStateTextAndContent(
             }
         }
 
-        if (state is DashboardUiState.Identifying && state.possibleSounds.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(32.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        if (state is DashboardUiState.Identifying) {
+            AnimatedVisibility(
+                visible = state.possibleSounds.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.dashboard_possible_sounds),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
-                    )
-
-                    state.possibleSounds.forEach { event ->
-                        val soundName =
-                            if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName ?: ""
-                        ListItem(
-                            colors = ListItemDefaults.colors(containerColor = Color.Transparent),
-                            headlineContent = { Text(soundName, fontWeight = FontWeight.SemiBold) },
-                            leadingContent = { Text(event.type.emoji, fontSize = 24.sp) },
-                            trailingContent = {
-                                Text(
-                                    "${(event.confidence * 100).toInt()}%",
-                                    color = TextSecondary,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                Spacer(modifier = Modifier.height(32.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            stringResource(R.string.dashboard_possible_sounds),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
                         )
+
+                        state.possibleSounds.forEach { event ->
+                            val soundName =
+                                if (event.type.nameRes != 0) stringResource(event.type.nameRes)
+                                else (event.type as? SoundType.Generic)?.displayName
+                                    ?: ""
+                            PossibleSoundItem(
+                                type = event.type,
+                                soundName = soundName,
+                                confidence = event.confidence,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun PossibleSoundItem(
+    soundName: String,
+    confidence: Float,
+    type: SoundType,
+    modifier: Modifier = Modifier,
+) {
+    ListItem(
+        modifier = modifier,
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(soundName, fontWeight = FontWeight.SemiBold) },
+        leadingContent = { Text(type.emoji, fontSize = 24.sp) },
+        trailingContent = {
+            Text(
+                "${(confidence * 100).toInt()}%",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    )
 }
 
 @Composable
@@ -586,5 +615,80 @@ private fun PrayTimeCountdownPreview() {
     val nextPray = prays.nextPray
     PreviewContainer {
         PrayTimeCountdown(nextPray)
+    }
+}
+
+@Preview(locale = "ar")
+@Composable
+private fun PossibleSoundsPreview() {
+    val state = remember {
+        DashboardUiState.Identifying(
+            nextPray = null,
+            possibleSounds = listOf(
+                SoundEvent(
+                    type = SoundType.PrayTime(prayNameRes = R.string.fajr),
+                    confidence = 0.83f,
+                    timestamp = System.currentTimeMillis()
+                ),
+                SoundEvent(
+                    type = SoundType.SomeoneSpeaking,
+                    confidence = 0.35f,
+                    timestamp = System.currentTimeMillis()
+                ),
+                SoundEvent(
+                    type = SoundType.Silence,
+                    confidence = 0.75f,
+                    timestamp = System.currentTimeMillis()
+                ),
+                SoundEvent(
+                    type = SoundType.AlarmSiren,
+                    confidence = 0.95f,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+        )
+    }
+    val rmsValue by rememberInfiniteTransition()
+        .animateFloat(
+            initialValue = 0f,
+            targetValue = 1.25f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+
+    PreviewContainer {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .geminiLikeAudioWaveBackground(
+                    rmsValue = rmsValue
+                ),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.dashboard_possible_sounds),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+                )
+
+                state.possibleSounds.forEach { event ->
+                    val soundName =
+                        if (event.type.nameRes != 0) stringResource(event.type.nameRes)
+                        else (event.type as? SoundType.Generic)?.displayName
+                            ?: ""
+                    PossibleSoundItem(
+                        type = event.type,
+                        soundName = soundName,
+                        confidence = event.confidence,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
     }
 }
