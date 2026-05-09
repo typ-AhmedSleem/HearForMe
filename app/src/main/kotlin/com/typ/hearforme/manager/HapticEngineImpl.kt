@@ -56,17 +56,11 @@ class HapticEngineImpl(context: Context) : HapticEngine {
     }
 
     override fun performInteractionFeedback() {
-        if (!hasVibrator) return
-        vibratePattern(HapticVibrationPattern.InteractionPriority)
+//        vibratePattern(HapticVibrationPattern.InteractionPriority)
     }
 
     override fun vibrate(pattern: LongArray, repeat: Int) {
-        if (!hasVibrator) return
-        // Build max-amplitude array for the simple pattern API
-        val amplitudes = IntArray(pattern.size) { i ->
-            if (i % 2 == 0) AMP_OFF else AMP_MAX
-        }
-        vibrateWithAmplitudes(pattern, amplitudes, repeat)
+        Log.w(TAG, "vibrate() called is deprecated!")
     }
 
     override fun vibratePattern(pattern: HapticVibrationPattern) {
@@ -74,7 +68,7 @@ class HapticEngineImpl(context: Context) : HapticEngine {
             VibrationEffect.createWaveform(
                 pattern.pattern,
                 pattern.amplitude shouldMatchLengthOf pattern.pattern,
-                pattern.repeatCount
+                -1
             ).also { effect ->
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     val attributes = VibrationAttributes.Builder().apply {
@@ -102,6 +96,7 @@ class HapticEngineImpl(context: Context) : HapticEngine {
                         }
                     }.build()
                     vibrator.vibrate(effect, attributes)
+                    Log.i(TAG, "Vibrating for pattern: $pattern")
                 } else {
                     @Suppress("DEPRECATION")
                     val audioAttributes = AudioAttributes.Builder()
@@ -122,29 +117,9 @@ class HapticEngineImpl(context: Context) : HapticEngine {
                             }
                         }.build()
                     vibrator.vibrate(effect, audioAttributes)
+                    Log.i(TAG, "Vibrating for pattern: $pattern")
                 }
             }
-        }
-    }
-
-    @Deprecated(
-        message = "Will be replaced with vibratePattern",
-        level = DeprecationLevel.WARNING
-    )
-    private fun vibrateWithAmplitudes(
-        timings: LongArray,
-        amplitudes: IntArray,
-        repeat: Int = -1,
-    ) {
-        val effect = VibrationEffect.createWaveform(timings, amplitudes, repeat)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val attributes = VibrationAttributes.Builder()
-                .setUsage(VibrationAttributes.USAGE_ALARM)
-                .build()
-            vibrator.vibrate(effect, attributes)
-        } else {
-            vibrator.vibrate(effect)
         }
     }
 }
