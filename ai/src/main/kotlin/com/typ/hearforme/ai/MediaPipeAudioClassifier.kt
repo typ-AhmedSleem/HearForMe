@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.collections.distinctBy
 import com.typ.hearforme.domain.classifier.AudioClassifier as DomainAudioClassifier
 
 class MediaPipeAudioClassifier(
@@ -180,6 +181,7 @@ class MediaPipeAudioClassifier(
                 } else null
             }
             .filterNot { it.type is SoundType.Silence }
+            .distinctBy { it.type }
             .toList()
         _possibleSounds.value = top4
 
