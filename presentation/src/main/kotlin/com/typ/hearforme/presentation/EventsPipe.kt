@@ -12,7 +12,7 @@ object EventsPipe {
     private val _events = MutableSharedFlow<Event>()
     val events = _events.asSharedFlow()
 
-    suspend fun sendEvent(event: Event) {
-        _events.emit(event)
+    fun sendEvent(event: Event) {
+        _events.tryEmit(event)
     }
 }

@@ -127,4 +127,6 @@
     <string name="error_tts_failed">فشل تهيئة تحويل النص إلى كلام</string>
     <string name="error_tts_lang_not_supported">اللغة %1$s غير مدعومة</string>
     <string name="suffix_in">بعد</string>
+    <string name="speech_engine_error">خطأ في محرك الكلام</string>
+    <string name="dashboard_possible_sounds">الأصوات المحتملة</string>
 </resources>

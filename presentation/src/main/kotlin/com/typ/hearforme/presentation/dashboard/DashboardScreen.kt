@@ -4,30 +4,23 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,25 +28,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -63,8 +53,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -73,7 +61,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -81,11 +68,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.typ.hearforme.designsystem.R
 import com.typ.hearforme.designsystem.theme.OnBackground
-import com.typ.hearforme.designsystem.theme.PrimaryBlue
 import com.typ.hearforme.designsystem.theme.TextSecondary
 import com.typ.hearforme.domain.interceptors.prays.PrayTimesInterceptor
 import com.typ.hearforme.domain.model.SoundEvent
 import com.typ.hearforme.domain.model.SoundType
+import com.typ.hearforme.presentation.components.geminiLikeAudioWaveBackground
 import com.typ.hearforme.presentation.preview.PreviewContainer
 import com.typ.islamictkt.prays.enums.PrayType.ASR
 import com.typ.islamictkt.prays.enums.PrayType.DHUHR
@@ -110,7 +97,6 @@ fun DashboardScreen(
 ) {
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val history by viewModel.history.collectAsStateWithLifecycle()
     val rms by viewModel.rms.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val nextPray by remember(uiState) {
@@ -150,114 +136,114 @@ fun DashboardScreen(
         topBar = {
             DashboardTopBar(
                 isLive = uiState !is DashboardUiState.ServiceOffline && uiState !is DashboardUiState.MicAccessRequired,
-                onSettingsClick = {
-                    viewModel.performHapticFeedback()
-                    onNavigateToSettings()
-                },
-                onSOSClick = {
-                    viewModel.performHapticFeedback()
-                    onSOSClick()
-                }
-            )
-        },
-        bottomBar = {
-            DashboardBottomBar(
-                onSettingsClick = {
-                    viewModel.performHapticFeedback()
-                    onNavigateToSettings()
-                },
                 onHistoryClick = {
                     viewModel.performHapticFeedback()
                     onNavigateToHistory()
                 },
-                onCommunicationClick = {
+                onSettingsClick = {
                     viewModel.performHapticFeedback()
-                    onNavigateToCommunication()
+                    onNavigateToSettings()
                 }
             )
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { innerPaddings ->
-        Column(
+        val animatedRms by animateFloatAsState(
+            targetValue = rms,
+            animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium),
+            label = "RmsAnimation"
+        )
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPaddings),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            PrayTimeCountdown(nextPray)
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .animateContentSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                SoundVisualizer(
-                    state = uiState,
-                    rms = rms,
-                    onClick = {
-                        when (uiState) {
-                            is DashboardUiState.MicAccessRequired -> viewModel.triggerPermissionRequest()
-                            is DashboardUiState.ServiceOffline -> viewModel.enableDetection()
-                            is DashboardUiState.Identified -> {
-                                if ((uiState as DashboardUiState.Identified).event.type is SoundType.SomeoneSpeaking) {
-                                    viewModel.disableDetection()
-                                    onNavigateToCommunication()
-                                }
-                            }
-                            else -> viewModel.performHapticFeedback()
-                        }
-                    }
+                .geminiLikeAudioWaveBackground(
+                    rmsValue = animatedRms,
+                    backgroundColor = MaterialTheme.colorScheme.background
                 )
-            }
-
-            AnimatedVisibility(
-                visible = history.isNotEmpty(),
-                enter = fadeIn(),
-                exit = fadeOut()
+                .padding(innerPaddings)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                PrayTimeCountdown(nextPray)
+
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
+                        .weight(1f)
+                        .padding(bottom = 24.dp)
+                        .animateContentSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            stringResource(R.string.dashboard_most_recent),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = TextSecondary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        TextButton(onClick = {
-                            viewModel.performHapticFeedback()
-                            onNavigateToHistory()
-                        }) {
-                            Text(stringResource(R.string.see_history), fontWeight = FontWeight.Bold, color = PrimaryBlue)
-                        }
-                    }
+                    DashboardStateTextAndContent(
+                        state = uiState,
+                        onClick = {
+                            when (uiState) {
+                                is DashboardUiState.MicAccessRequired -> viewModel.triggerPermissionRequest()
+                                is DashboardUiState.ServiceOffline -> viewModel.enableDetection()
+                                is DashboardUiState.Identified -> {
+                                    if ((uiState as DashboardUiState.Identified).event.type is SoundType.SomeoneSpeaking) {
+                                        viewModel.disableDetection()
+                                        onNavigateToCommunication()
+                                    }
+                                }
 
-                    LazyColumn(
+                                else -> viewModel.performHapticFeedback()
+                            }
+                        }
+                    )
+                }
+
+                /*AnimatedVisibility(
+                    visible = history.isNotEmpty(),
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .wrapContentHeight(),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                        contentPadding = PaddingValues(bottom = 24.dp)
+                            .padding(horizontal = 20.dp)
                     ) {
-                        items(
-                            items = history.take(1),
-                            key = { it.timestamp })
-                        { event ->
-                            SoundHistoryItem(event)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                stringResource(R.string.dashboard_most_recent),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontWeight = FontWeight.Bold
+                            )
+                            TextButton(onClick = {
+                                viewModel.performHapticFeedback()
+                                onNavigateToHistory()
+                            }) {
+                                Text(stringResource(R.string.see_history), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }
+
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            contentPadding = PaddingValues(bottom = 24.dp)
+                        ) {
+                            items(
+                                items = history.take(1),
+                                key = { it.timestamp })
+                            { event ->
+                                SoundHistoryItem(event)
+                            }
                         }
                     }
-                }
+                }*/
             }
         }
     }
@@ -266,8 +252,8 @@ fun DashboardScreen(
 @Composable
 fun DashboardTopBar(
     isLive: Boolean,
+    onHistoryClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onSOSClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -278,7 +264,7 @@ fun DashboardTopBar(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
+            /*Box(
                 modifier = Modifier
                     .size(36.dp)
                     .background(PrimaryBlue, RoundedCornerShape(10.dp)),
@@ -286,7 +272,7 @@ fun DashboardTopBar(
             ) {
                 Text("👂", fontSize = 18.sp)
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(12.dp))*/
             Text(
                 stringResource(R.string.app_name),
                 style = MaterialTheme.typography.titleLarge,
@@ -295,11 +281,7 @@ fun DashboardTopBar(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            val indicatorColor by animateColorAsState(
-                if (isLive) Color(0xFF4CAF50) else Color.LightGray,
-                label = "StatusColor"
-            )
-            Surface(
+            /*Surface(
                 shape = RoundedCornerShape(16.dp),
                 color = Color.White,
                 shadowElevation = 2.dp,
@@ -322,152 +304,168 @@ fun DashboardTopBar(
                         color = Color.DarkGray
                     )
                 }
+            }*/
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            IconButton(onClick = onHistoryClick, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    contentDescription = null,
+                    imageVector = Icons.Default.History,
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
             }
 
-//            Spacer(modifier = Modifier.width(12.dp))
-
-            /*IconButton(onClick = onSOSClick) {
-                Text("🚨", fontSize = 24.sp)
-            }*/
+            IconButton(onClick = onSettingsClick, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    contentDescription = null,
+                    imageVector = Icons.Default.Settings,
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
         }
     }
 }
 
 @Composable
-fun SoundVisualizer(
+fun DashboardStateTextAndContent(
     state: DashboardUiState,
-    rms: Float,
     onClick: () -> Unit,
 ) {
-    val primaryColor = if (state is DashboardUiState.Identified) {
-        Color(state.event.type.color)
-    } else MaterialTheme.colorScheme.primary
-
-    val pulseScale by animateFloatAsState(
-        targetValue = when (state) {
-            is DashboardUiState.Identified -> 1.6f
-            is DashboardUiState.ServiceOffline, is DashboardUiState.MicAccessRequired -> 0.001f
-            else -> (rms * 10f).fastCoerceIn(1f, 1.5f)
-        },
-        animationSpec = spring(
-//            dampingRatio = Spring.DampingRatioHighBouncy,
-            stiffness = Spring.StiffnessMediumLow,
-        ),
-        label = "Pulse"
-    )
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Surface(
-            modifier = Modifier
-                .size(220.dp)
-                .drawBehind {
-                    val radius = (size.minDimension / 2f) * pulseScale
-                    val endingRadius = (radius * 1.5f).fastCoerceAtLeast(radius)
-                    drawCircle(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                primaryColor.copy(alpha = 0.6f),
-                                primaryColor.copy(alpha = 0.4f),
-                                primaryColor.copy(alpha = 0.2f),
-                                primaryColor.copy(alpha = 0.1f),
-                                Color.Transparent,
-                            ),
-                            center = center,
-                            radius = endingRadius
-                        ),
-                        radius = endingRadius,
-                        center = center
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = null,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            when (state) {
+                DashboardUiState.MicAccessRequired -> {
+                    Text("🎤", fontSize = 64.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(stringResource(R.string.dashboard_mic_required), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.dashboard_grant_permission),
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
                     )
                 }
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onClick
-                ),
-            shape = CircleShape,
-            shadowElevation = 8.dp
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                AnimatedContent(
-                    targetState = state,
-                    transitionSpec = { (fadeIn() + scaleIn()) togetherWith (fadeOut() + scaleOut()) },
-                    label = "VisualizerContent"
-                ) { targetState ->
-                    when (targetState) {
-                        DashboardUiState.MicAccessRequired -> Text("🎤", fontSize = 80.sp, color = Color.LightGray)
-                        DashboardUiState.ServiceOffline -> Text("💤", fontSize = 80.sp, color = Color.LightGray)
-                        is DashboardUiState.Identifying -> Text("?", fontSize = 80.sp, color = Color(0xFFBDC3C7))
-                        is DashboardUiState.Identified -> Text(targetState.event.type.emoji, fontSize = 80.sp)
+
+                DashboardUiState.ServiceOffline -> {
+                    Text("💤", fontSize = 64.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(stringResource(R.string.dashboard_detection_offline), fontWeight = FontWeight.Bold, fontSize = 24.sp)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        stringResource(R.string.dashboard_start_listening),
+                        color = TextSecondary,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                is DashboardUiState.Identifying -> {
+                    Text(
+                        stringResource(R.string.dashboard_listening),
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+
+                is DashboardUiState.Identified -> {
+                    val event = state.event
+                    Text(event.type.emoji, fontSize = 64.sp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    StatusBadge(
+                        color = Color(event.type.color),
+                        text = stringResource(
+                            R.string.dashboard_confidence_percentage,
+                            event.confidence
+                                .fastCoerceIn(0f, 0.95f)
+                                .times(100)
+                                .toInt()
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName
+                            ?: "",
+                        style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
+                    )
+                    if (event.type is SoundType.SomeoneSpeaking) {
+                        Text(
+                            stringResource(R.string.dashboard_tap_to_see),
+                            color = TextSecondary,
+                            fontSize = 16.sp
+                        )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        if (state is DashboardUiState.Identifying) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        stringResource(R.string.dashboard_possible_sounds),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+                    )
 
-        AnimatedContent(
-            targetState = state,
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center,
-            transitionSpec = { fadeIn() + expandVertically() togetherWith fadeOut() + shrinkVertically() },
-        ) { currentState ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                when (currentState) {
-                    DashboardUiState.MicAccessRequired -> {
-                        Text(stringResource(R.string.dashboard_mic_required), fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.dashboard_grant_permission), color = TextSecondary, fontSize = 14.sp)
-                    }
-
-                    DashboardUiState.ServiceOffline -> {
-                        Text(stringResource(R.string.dashboard_detection_offline), fontWeight = FontWeight.Bold, fontSize = 20.sp)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.dashboard_start_listening), color = TextSecondary, fontSize = 14.sp)
-                    }
-
-                    is DashboardUiState.Identifying -> {
-//                StatusBadge(color = Color(0xFFFFB703), text = "Analyzing Sounds...")
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            stringResource(R.string.dashboard_listening),
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold
+                    state.possibleSounds.forEach { event ->
+                        val soundName =
+                            if (event.type.nameRes != 0) stringResource(event.type.nameRes)
+                            else (event.type as? SoundType.Generic)?.displayName
+                                ?: ""
+                        PossibleSoundItem(
+                            type = event.type,
+                            soundName = soundName,
+                            confidence = event.confidence,
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    }
-
-                    is DashboardUiState.Identified -> {
-                        val event = currentState.event
-                        Spacer(modifier = Modifier.height(16.dp))
-                        StatusBadge(
-                            color = Color(event.type.color),
-                            text = stringResource(
-                                R.string.dashboard_confidence_percentage,
-                                event.confidence
-                                    .fastCoerceIn(0f, 0.95f)
-                                    .times(100)
-                                    .toInt()
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = if (event.type.nameRes != 0) stringResource(event.type.nameRes) else (event.type as? SoundType.Generic)?.displayName
-                                ?: "",
-                            style = MaterialTheme.typography.displaySmall,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        if (event.type is SoundType.SomeoneSpeaking) {
-                            Text(
-                                stringResource(R.string.dashboard_tap_to_see),
-                                color = TextSecondary,
-                                fontSize = 14.sp
-                            )
-                        }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun PossibleSoundItem(
+    soundName: String,
+    confidence: Float,
+    type: SoundType,
+    modifier: Modifier = Modifier,
+) {
+    ListItem(
+        modifier = modifier,
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        headlineContent = { Text(soundName, fontWeight = FontWeight.SemiBold) },
+        leadingContent = { Text(type.emoji, fontSize = 24.sp) },
+        trailingContent = {
+            Text(
+                "${(confidence * 100).toInt()}%",
+                color = MaterialTheme.colorScheme.onBackground,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    )
 }
 
 @Composable
@@ -548,88 +546,6 @@ fun LazyItemScope.SoundHistoryItem(event: SoundEvent) {
     }
 }
 
-@Composable
-fun DashboardBottomBar(
-    onSettingsClick: () -> Unit,
-    onHistoryClick: () -> Unit,
-    onCommunicationClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center
-    ) {
-        Surface(
-            modifier = Modifier
-                .wrapContentWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .height(72.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            shadowElevation = 8.dp
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(
-                        horizontal = 16.dp
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(
-                    alignment = Alignment.CenterHorizontally,
-                    space = 32.dp,
-                ),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-//                IconButton(
-//                    onClick = onCommunicationClick,
-//                    shape = RoundedCornerShape(24.dp),
-//                    modifier = Modifier.size(50.dp),
-//                    colors = IconButtonDefaults.filledIconButtonColors(
-//                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
-//                    )
-//                ) {
-//                    Box(contentAlignment = Alignment.Center) {
-//                        Text(
-//                            "💬",
-//                            fontSize = 24.sp,
-//                            color = MaterialTheme.colorScheme.surface
-//                        )
-//                    }
-//                }
-
-                IconButton(
-                    onClick = onHistoryClick,
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.size(50.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Text(
-                        "🕓",
-                        fontSize = 24.sp,
-                        color = MaterialTheme.colorScheme.surface
-                    )
-                }
-
-                IconButton(
-                    shape = RoundedCornerShape(24.dp),
-                    onClick = onSettingsClick,
-                    modifier = Modifier.size(50.dp),
-                    colors = IconButtonDefaults.filledIconButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                ) {
-                    Icon(
-                        contentDescription = null,
-                        imageVector = Icons.Default.Settings,
-                        tint = MaterialTheme.colorScheme.surface
-                    )
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun PrayTimeCountdown(nextPray: Pray?) {
@@ -692,5 +608,80 @@ private fun PrayTimeCountdownPreview() {
     val nextPray = prays.nextPray
     PreviewContainer {
         PrayTimeCountdown(nextPray)
+    }
+}
+
+@Preview(locale = "ar")
+@Composable
+private fun PossibleSoundsPreview() {
+    val state = remember {
+        DashboardUiState.Identifying(
+            nextPray = null,
+            possibleSounds = listOf(
+                SoundEvent(
+                    type = SoundType.PrayTime(prayNameRes = R.string.fajr),
+                    confidence = 0.83f,
+                    timestamp = System.currentTimeMillis()
+                ),
+                SoundEvent(
+                    type = SoundType.SomeoneSpeaking,
+                    confidence = 0.35f,
+                    timestamp = System.currentTimeMillis()
+                ),
+                SoundEvent(
+                    type = SoundType.Silence,
+                    confidence = 0.75f,
+                    timestamp = System.currentTimeMillis()
+                ),
+                SoundEvent(
+                    type = SoundType.AlarmSiren,
+                    confidence = 0.95f,
+                    timestamp = System.currentTimeMillis()
+                )
+            )
+        )
+    }
+    val rmsValue by rememberInfiniteTransition()
+        .animateFloat(
+            initialValue = 0f,
+            targetValue = 1.25f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1000),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+
+    PreviewContainer {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .geminiLikeAudioWaveBackground(
+                    rmsValue = rmsValue
+                ),
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.dashboard_possible_sounds),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+                )
+
+                state.possibleSounds.forEach { event ->
+                    val soundName =
+                        if (event.type.nameRes != 0) stringResource(event.type.nameRes)
+                        else (event.type as? SoundType.Generic)?.displayName
+                            ?: ""
+                    PossibleSoundItem(
+                        type = event.type,
+                        soundName = soundName,
+                        confidence = event.confidence,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        }
     }
 }

@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.collections.distinctBy
 import com.typ.hearforme.domain.classifier.AudioClassifier as DomainAudioClassifier
 
 class MediaPipeAudioClassifier(
@@ -58,6 +59,9 @@ class MediaPipeAudioClassifier(
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
     override val rms = _rms.asSharedFlow()
+
+    private val _possibleSounds = MutableStateFlow<List<SoundEvent>>(emptyList())
+    override val possibleSounds = _possibleSounds.asStateFlow()
 
     private val _isRunning = MutableStateFlow(false)
     override val isRunning = _isRunning.asStateFlow()
@@ -111,18 +115,38 @@ class MediaPipeAudioClassifier(
                 .build(),
             15600
         )
+        ShortArray(15600) // matches tensorAudio capacity
 
         pollingJob = scope.launch {
             while (isActive && _isRunning.value) {
                 try {
+                    /*val readSize = record.read(shortArray, 0, shortArray.size)
+                    if (readSize > 0) {
+                        // Calculate RMS
+                        var sumSquare = 0.0f
+                        for (i in 0 until readSize) {
+                            val sample = shortArray[i] / 32768f
+                            sumSquare += sample * sample
+                        }
+                        val rmsValue = kotlin.math.sqrt((sumSquare / readSize).toDouble()).toFloat()
+                        _rms.tryEmit(rmsValue).also {
+                            Log.d("HearForMe", "Emitting RMS($rmsValue) is successful= '$it'.")
+                        }
+
+                    }*/
+                        // Load to MediaPipe tensor
                     tensorAudio.load(record)
-                    val results = audioClassifier.classify(tensorAudio)
-                    processResults(results)
+                        val results = audioClassifier.classify(tensorAudio)
+                        processResults(results)
                 } catch (t: Throwable) {
                     Log.e("HearForMe", "Polling error", t)
                     break
                 }
-                delay(100)
+                delay(10)
+            }
+        }.apply {
+            invokeOnCompletion { cause ->
+                Log.d("HearForMe", "Polling finished. Cause: '$cause'.")
             }
         }
     }
@@ -133,14 +157,33 @@ class MediaPipeAudioClassifier(
 
         val classifications = classificationResults.first().classifications()
 
-        // Prepare raw results for the engine (label -> score)
         val rawResults = mutableMapOf<String, Float>()
         classifications.forEach { classification ->
             classification.categories().forEach { category ->
                 rawResults[category.categoryName()] = category.score()
-                Log.i("HearForMe", "Raw Result: ${category.categoryName()} (${category.score()})")
             }
         }
+
+        // --- EXPOSE TOP 4 SOUNDS IN REALTIME ---
+        val top4 = rawResults.entries
+            .asSequence()
+            .filter { it.value > 0.01f }
+            .sortedByDescending { it.value }
+            .take(4)
+            .mapNotNull { entry ->
+                val type = SoundType.fromLabel(entry.key)
+                if (type !is SoundType.Generic) {
+                    SoundEvent(
+                        type = type,
+                        confidence = entry.value,
+                        timestamp = System.currentTimeMillis()
+                    )
+                } else null
+            }
+            .filterNot { it.type is SoundType.Silence }
+            .distinctBy { it.type }
+            .toList()
+        _possibleSounds.value = top4
 
         // --- PRODUCTION-SAFE SOUND DECISION ENGINE (Deterministic Smoothing & Hysteresis) ---
         val engineEvents = engine.processFrame(rawResults)
