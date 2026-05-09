@@ -26,6 +26,7 @@ import com.typ.islamictkt.prays.lib.PrayerTimesCalculator
 import com.typ.islamictkt.prays.models.Pray
 import com.typ.islamictkt.prays.models.PrayerTimes
 import com.typ.islamictkt.prays.utils.prayerTimesCalcConfig
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -36,9 +37,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 sealed interface DashboardUiState {
