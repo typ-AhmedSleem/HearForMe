@@ -414,38 +414,31 @@ fun DashboardStateTextAndContent(
         }
 
         if (state is DashboardUiState.Identifying) {
-            AnimatedVisibility(
-                visible = state.possibleSounds.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth()
+            Spacer(modifier = Modifier.height(32.dp))
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxWidth(),
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            stringResource(R.string.dashboard_possible_sounds),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
-                        )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        stringResource(R.string.dashboard_possible_sounds),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(bottom = 8.dp, start = 8.dp)
+                    )
 
-                        state.possibleSounds.forEach { event ->
-                            val soundName =
-                                if (event.type.nameRes != 0) stringResource(event.type.nameRes)
-                                else (event.type as? SoundType.Generic)?.displayName
-                                    ?: ""
-                            PossibleSoundItem(
-                                type = event.type,
-                                soundName = soundName,
-                                confidence = event.confidence,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                    state.possibleSounds.forEach { event ->
+                        val soundName =
+                            if (event.type.nameRes != 0) stringResource(event.type.nameRes)
+                            else (event.type as? SoundType.Generic)?.displayName
+                                ?: ""
+                        PossibleSoundItem(
+                            type = event.type,
+                            soundName = soundName,
+                            confidence = event.confidence,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
